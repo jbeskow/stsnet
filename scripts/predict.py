@@ -31,6 +31,7 @@ import argparse
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 
@@ -50,26 +51,19 @@ def fmt_table(rows: list[list], headers: list[str]) -> str:
 
 def extract_pose(video_path: Path, pose_path: Path) -> None:
     """Run video_to_pose (MediaPipe Holistic) on a video file."""
-    try:
-        from tqdm import tqdm
-        bar = tqdm(total=1, desc="Extracting pose", unit="clip",
-                   bar_format="{l_bar}{bar}| {elapsed}", leave=False)
-    except ImportError:
-        bar = None
-
+    print(f"Extracting pose from {video_path.name}...", end=" ", flush=True)
+    t0 = time.time()
     result = subprocess.run(
         ["video_to_pose", "-i", str(video_path), "-o", str(pose_path),
          "--format", "mediapipe"],
         capture_output=True,
     )
-    if bar:
-        bar.update(1)
-        bar.close()
-
     if result.returncode != 0:
+        print()
         msg = result.stderr.decode()[-400:]
         print(f"Error: pose extraction failed:\n{msg}", file=sys.stderr)
         sys.exit(1)
+    print(f"done ({time.time() - t0:.1f}s)")
 
 
 def main():
@@ -120,19 +114,11 @@ def main():
         pose_path = input_path
 
     # ── Model loading ─────────────────────────────────────────────────────────
-    try:
-        from tqdm import tqdm
-        bar = tqdm(total=1, desc="Loading model", unit="ckpt",
-                   bar_format="{l_bar}{bar}| {elapsed}", leave=False)
-    except ImportError:
-        bar = None
-
+    print(f"Loading model...", end=" ", flush=True)
+    t0 = time.time()
     from stsnet.inference import STSNetInference
     model = STSNetInference(ckpt_path, device=args.device)
-
-    if bar:
-        bar.update(1)
-        bar.close()
+    print(f"done ({time.time() - t0:.1f}s)")
 
     # ── Alignment mode ─────────────────────────────────────────────────────────
     if args.description is not None:

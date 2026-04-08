@@ -15,6 +15,19 @@ Predicts nine phonological features simultaneously from MediaPipe pose streams:
 | nondom_shape | 42 non-dominant handshapes |
 | nondom_att | 34 non-dominant attitudes |
 
+## Architecture
+
+![STS-Net architecture](docs/architecture.png)
+
+Each pose stream (dominant hand, non-dominant hand, body, face) is encoded independently
+by a shared-weight `FrameEncoder` (linear projection → 3 × temporal conv blocks).
+The four stream representations are concatenated and fused through a linear layer + LayerNorm.
+An optional BiLSTM adds temporal context. Nine linear heads produce per-frame predictions.
+
+During the alignment bootstrap (training rounds 1–N) the BiLSTM is omitted — peakier
+frame-level emissions produce sharper Viterbi boundaries. The final model adds the BiLSTM
+for smoother per-frame inference.
+
 ## Installation
 
 ```bash

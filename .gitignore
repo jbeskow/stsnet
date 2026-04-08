@@ -5,8 +5,8 @@ __pycache__/
 dist/
 build/
 .eggs/
-*.pt
-checkpoints/
+checkpoints/*
+!checkpoints/stsnet_base.pt
 logs/*.log
 pseudo_signing.json
 description_parse_cache.json

@@ -1,0 +1,53 @@
+data:
+  csv_path: /path/to/SSLL/sign_data.csv
+  pose_dir: /path/to/SSLL/pose
+  cache_dir: /path/to/SSLL/pose_cache
+  signer_map: data/signer_map.csv
+  vocab_file: data/sts_handformer.txt
+
+model:
+  hidden_dim: 512
+  conv_layers: 3
+  kernel_size: 5
+  dropout: 0.2
+  bilstm_layers: 1
+  streams: [dom, nondom, body, face]
+
+train:
+  epochs: 60
+  batch_size: 32
+  lr: 3.0e-4
+  weight_decay: 1.0e-4
+  grad_clip: 1.0
+  val_frac: 0.15
+  num_workers: 0
+  noise_std: 0.005
+  loss_weights:
+    state: 1.0
+    shape: 1.0
+    att: 1.0
+    hand_type: 0.5
+    contact_loc: 0.5
+    contact_type: 0.5
+    motion: 0.5
+    nondom_shape: 0.5
+    nondom_att: 0.5
+
+align:
+  max_shapes: 3
+  min_dur: 3
+  batch_size: 64
+  emission_weights:
+    state: 1.0
+    shape: 1.0
+    att: 0.7
+    hand_type: 0.3
+    motion: 0.5
+    contact_loc: 0.0
+    contact_type: 0.0
+
+recipe:
+  max_rounds: 6
+  conv_threshold: 0.005
+  conda_env: slp
+  gpu: 0

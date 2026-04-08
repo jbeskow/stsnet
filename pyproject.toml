@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "stsnet"
+version = "0.1.0"
+description = "STS-Net: multi-head sign language phonology model"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.0",
+    "numpy",
+    "pose-format",
+    "pyyaml",
+]
+
+[project.scripts]
+stsnet-train    = "scripts.train:main"
+stsnet-align    = "scripts.align:main"
+stsnet-evaluate = "scripts.evaluate:main"
+stsnet-recipe   = "scripts.recipe:main"

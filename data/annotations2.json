@@ -1,0 +1,1602 @@
+{
+  "for-ros-skull-00036-tecken.mp4.pose": {
+    "word": "för ros skull",
+    "signer": "signer_0",
+    "shapes": [
+      "Flata handen",
+      "Tumhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      17,
+      26,
+      53
+    ],
+    "verified": true
+  },
+  "valkomstdrink-24705-tecken.mp4.pose": {
+    "word": "välkomstdrink",
+    "signer": "signer_11",
+    "shapes": [
+      "Flata handen",
+      "S-handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      20,
+      36,
+      60
+    ],
+    "verified": true
+  },
+  "katastrof-01688-tecken.mp4.pose": {
+    "word": "katastrof",
+    "signer": "signer_1",
+    "shapes": [
+      "Klohanden",
+      "Knutna handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      14,
+      27,
+      46
+    ],
+    "verified": true
+  },
+  "agenda-10353-tecken.mp4.pose": {
+    "word": "agenda",
+    "signer": "signer_6",
+    "shapes": [
+      "Flata handen",
+      "Vinkelhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      13,
+      24,
+      49
+    ],
+    "verified": true
+  },
+  "avgas-01825-tecken.mp4.pose": {
+    "word": "avgas",
+    "signer": "signer_1",
+    "shapes": [
+      "O-handen",
+      "Sprethanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      13,
+      19,
+      47
+    ],
+    "verified": true
+  },
+  "forstar-inte-02567-tecken.mp4.pose": {
+    "word": "förstår inte",
+    "signer": "signer_2",
+    "shapes": [
+      "Pekfingret",
+      "Flata handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      9,
+      19,
+      31
+    ],
+    "verified": true
+  },
+  "jesus-06900-tecken.mp4.pose": {
+    "word": "Jesus",
+    "signer": "signer_6",
+    "shapes": [
+      "Sprethanden",
+      "Stora långfingret"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      12,
+      17,
+      36
+    ],
+    "verified": true
+  },
+  "vara-med-00450-tecken.mp4.pose": {
+    "word": "vara med",
+    "signer": "signer_2",
+    "shapes": [
+      "O-handen",
+      "Flata handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      10,
+      17,
+      36
+    ],
+    "verified": true
+  },
+  "arton-20375-tecken.mp4.pose": {
+    "word": "arton",
+    "signer": "signer_1",
+    "shapes": [
+      "Sprethanden",
+      "Tupphanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      15,
+      28,
+      49
+    ],
+    "verified": true
+  },
+  "ordningsvakt-00476-tecken.mp4.pose": {
+    "word": "ordningsvakt",
+    "signer": "signer_2",
+    "shapes": [
+      "Flata handen",
+      "Dubbelkroken"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      14,
+      26,
+      54
+    ],
+    "verified": true
+  },
+  "omgiv-11010-tecken.mp4.pose": {
+    "word": "omgiv",
+    "signer": "signer_1",
+    "shapes": [
+      "V-handen",
+      "S-handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      11,
+      20,
+      50
+    ],
+    "verified": true
+  },
+  "hijab-20097-tecken.mp4.pose": {
+    "word": "hijab",
+    "signer": "signer_1",
+    "shapes": [
+      "Måtthanden",
+      "Hållhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      17,
+      30,
+      59
+    ],
+    "verified": true
+  },
+  "bygglov-16742-tecken.mp4.pose": {
+    "word": "bygglov",
+    "signer": "signer_1",
+    "shapes": [
+      "Flata handen",
+      "Tumhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      12,
+      28,
+      52
+    ],
+    "verified": true
+  },
+  "riihimaki-16764-tecken.mp4.pose": {
+    "word": "Riihimäki",
+    "signer": "signer_14",
+    "shapes": [
+      "Knutna handen",
+      "Sprethanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      22,
+      34,
+      52
+    ],
+    "verified": true
+  },
+  "datakorkort-15340-tecken.mp4.pose": {
+    "word": "datakörkort",
+    "signer": "signer_2",
+    "shapes": [
+      "Flata handen",
+      "Måtthanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      11,
+      26,
+      51
+    ],
+    "verified": true
+  },
+  "pension-03629-tecken.mp4.pose": {
+    "word": "pension",
+    "signer": "signer_1",
+    "shapes": [
+      "Måtthanden",
+      "Hållhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      12,
+      18,
+      47
+    ],
+    "verified": true
+  },
+  "overvaka-23092-tecken.mp4.pose": {
+    "word": "övervaka",
+    "signer": "signer_0",
+    "shapes": [
+      "Flata handen",
+      "Dubbelkroken"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      22,
+      31,
+      64
+    ],
+    "verified": true
+  },
+  "brommaplan-18078-tecken.mp4.pose": {
+    "word": "Brommaplan",
+    "signer": "signer_0",
+    "shapes": [
+      "Flyghanden",
+      "Flata handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      21,
+      38,
+      65
+    ],
+    "verified": true
+  },
+  "resedokument-13363-tecken.mp4.pose": {
+    "word": "resedokument",
+    "signer": "signer_1",
+    "shapes": [
+      "Dubbelkroken",
+      "N-handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      12,
+      29,
+      58
+    ],
+    "verified": true
+  },
+  "bojningsmorfem-08335-tecken.mp4.pose": {
+    "word": "böjningsmorfem",
+    "signer": "signer_9",
+    "shapes": [
+      "Knutna handen",
+      "Pekfingret"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      12,
+      25,
+      40
+    ],
+    "verified": true
+  },
+  "tolka-00897-tecken.mp4.pose": {
+    "word": "tolka",
+    "signer": "signer_2",
+    "shapes": [
+      "Sprethanden",
+      "A-handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      11,
+      21,
+      45
+    ],
+    "verified": true
+  },
+  "romantisk-01779-tecken.mp4.pose": {
+    "word": "romantisk",
+    "signer": "signer_1",
+    "shapes": [
+      "O-handen",
+      "Sprethanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      12,
+      19,
+      51
+    ],
+    "verified": true
+  },
+  "plastpase-20122-tecken.mp4.pose": {
+    "word": "plastpåse",
+    "signer": "signer_1",
+    "shapes": [
+      "A-handen",
+      "Hållhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      20,
+      31,
+      75
+    ],
+    "verified": true
+  },
+  "arbetstid-15788-tecken.mp4.pose": {
+    "word": "arbetstid",
+    "signer": "signer_1",
+    "shapes": [
+      "Knutna handen",
+      "Pekfingret"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      12,
+      24,
+      44
+    ],
+    "verified": true
+  },
+  "tanker-inte-gora-00459-tecken.mp4.pose": {
+    "word": "tänker inte göra",
+    "signer": "signer_2",
+    "shapes": [
+      "Pekfingret",
+      "Flata handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      11,
+      21,
+      47
+    ],
+    "verified": true
+  },
+  "lokalbuss-24365-tecken.mp4.pose": {
+    "word": "lokalbuss",
+    "signer": "signer_1",
+    "shapes": [
+      "Pekfingret",
+      "Vinkelhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      18,
+      40,
+      64
+    ],
+    "verified": true
+  },
+  "spela-in-05504-tecken.mp4.pose": {
+    "word": "spela in",
+    "signer": "signer_2",
+    "shapes": [
+      "Måtthanden",
+      "Hållhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      13,
+      24,
+      50
+    ],
+    "verified": true
+  },
+  "somntuta-17190-tecken.mp4.pose": {
+    "word": "sömntuta",
+    "signer": "signer_1",
+    "shapes": [
+      "Raka måtthanden",
+      "Tumhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      11,
+      24,
+      54
+    ],
+    "verified": true
+  },
+  "tapir-19610-tecken.mp4.pose": {
+    "word": "tapir",
+    "signer": "signer_0",
+    "shapes": [
+      "S-handen",
+      "Knutna handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      17,
+      30,
+      47
+    ],
+    "verified": true
+  },
+  "klockare-06939-tecken.mp4.pose": {
+    "word": "klockare",
+    "signer": "signer_6",
+    "shapes": [
+      "Knutna handen",
+      "Måtthanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      13,
+      34,
+      50
+    ],
+    "verified": true
+  },
+  "i-lander-20564-tecken.mp4.pose": {
+    "word": "I-länder",
+    "signer": "signer_1",
+    "shapes": [
+      "Lillfingret",
+      "Flata handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      18,
+      29,
+      64
+    ],
+    "verified": true
+  },
+  "anpassningsbidrag-15058-tecken.mp4.pose": {
+    "word": "anpassningsbidrag",
+    "signer": "signer_0",
+    "shapes": [
+      "S-handen",
+      "A-handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      14,
+      29,
+      54
+    ],
+    "verified": true
+  },
+  "division-5-17645-tecken.mp4.pose": {
+    "word": "division 5",
+    "signer": "signer_1",
+    "shapes": [
+      "Knutna handen",
+      "Sprethanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      10,
+      21,
+      41
+    ],
+    "verified": true
+  },
+  "kolonisera-omrade-18415-tecken.mp4.pose": {
+    "word": "kolonisera (område)",
+    "signer": "signer_1",
+    "shapes": [
+      "Klohanden",
+      "Knutna handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      19,
+      29,
+      55
+    ],
+    "verified": true
+  },
+  "uppflyttning-19621-tecken.mp4.pose": {
+    "word": "uppflyttning",
+    "signer": "signer_0",
+    "shapes": [
+      "O-handen",
+      "Sprethanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      24,
+      34,
+      49
+    ],
+    "verified": true
+  },
+  "norrkoping-06431-tecken.mp4.pose": {
+    "word": "Norrköping",
+    "signer": "signer_7",
+    "shapes": [
+      "Måtthanden",
+      "Hållhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      18,
+      28,
+      59
+    ],
+    "verified": true
+  },
+  "vispgradde-06542-tecken.mp4.pose": {
+    "word": "vispgrädde",
+    "signer": "signer_2",
+    "shapes": [
+      "Hållhanden",
+      "Sprethanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      13,
+      27,
+      43
+    ],
+    "verified": true
+  },
+  "langsta-farg-10950-tecken.mp4.pose": {
+    "word": "längsta färg",
+    "signer": "signer_1",
+    "shapes": [
+      "Pekfingret",
+      "Sprethanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      11,
+      29,
+      54
+    ],
+    "verified": true
+  },
+  "sjoman-03584-tecken.mp4.pose": {
+    "word": "sjöman",
+    "signer": "signer_2",
+    "shapes": [
+      "Vinkelhanden",
+      "Tumhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      13,
+      28,
+      30
+    ],
+    "verified": true
+  },
+  "husbil-15828-tecken.mp4.pose": {
+    "word": "husbil",
+    "signer": "signer_1",
+    "shapes": [
+      "Flata handen",
+      "Knutna handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      13,
+      25,
+      51
+    ],
+    "verified": true
+  },
+  "elevassistent-14361-tecken.mp4.pose": {
+    "word": "elevassistent",
+    "signer": "signer_1",
+    "shapes": [
+      "Tumhanden",
+      "Flata handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      12,
+      28,
+      53
+    ],
+    "verified": true
+  },
+  "influensa-08189-tecken.mp4.pose": {
+    "word": "influensa",
+    "signer": "signer_2",
+    "shapes": [
+      "O-handen",
+      "Sprethanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      16,
+      23,
+      41
+    ],
+    "verified": true
+  },
+  "funktionshinder-12882-tecken.mp4.pose": {
+    "word": "funktionshinder",
+    "signer": "signer_1",
+    "shapes": [
+      "Sprethanden",
+      "Vinkelhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      13,
+      31,
+      59
+    ],
+    "verified": true
+  },
+  "vagarbete-24236-tecken.mp4.pose": {
+    "word": "vägarbete",
+    "signer": "signer_1",
+    "shapes": [
+      "Flata handen",
+      "Knutna handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      19,
+      32,
+      61
+    ],
+    "verified": true
+  },
+  "dubbelbogey-14042-tecken.mp4.pose": {
+    "word": "dubbelbogey",
+    "signer": "signer_1",
+    "shapes": [
+      "V-handen",
+      "Tumhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      12,
+      28,
+      58
+    ],
+    "verified": true
+  },
+  "pank-08406-tecken.mp4.pose": {
+    "word": "pank",
+    "signer": "signer_1",
+    "shapes": [
+      "Sprethanden",
+      "Stora nyphanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      13,
+      20,
+      44
+    ],
+    "verified": true
+  },
+  "riksniva-24900-tecken.mp4.pose": {
+    "word": "riksnivå",
+    "signer": "signer_0",
+    "shapes": [
+      "Klohanden",
+      "Vinkelhanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      17,
+      29,
+      52
+    ],
+    "verified": true
+  },
+  "storasyster-15946-tecken.mp4.pose": {
+    "word": "storasyster",
+    "signer": "signer_0",
+    "shapes": [
+      "Flata handen",
+      "Krokfingret"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      13,
+      24,
+      48
+    ],
+    "verified": true
+  },
+  "kolonialism-18416-tecken.mp4.pose": {
+    "word": "kolonialism",
+    "signer": "signer_1",
+    "shapes": [
+      "Klohanden",
+      "Knutna handen"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      18,
+      28,
+      63
+    ],
+    "verified": true
+  },
+  "grona-linjen-17278-tecken.mp4.pose": {
+    "word": "gröna linjen",
+    "signer": "signer_1",
+    "shapes": [
+      "Flata handen",
+      "Måtthanden"
+    ],
+    "n_phases": 2,
+    "boundaries": [
+      12,
+      31,
+      55
+    ],
+    "verified": true
+  },
+  "spraklararsprak-23320-tecken.mp4.pose": {
+    "word": "språklärarspråk",
+    "signer": "signer_1",
+    "shapes": [
+      "Sprethanden",
+      "A-handen",
+      "Sprethanden"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      20,
+      34,
+      53,
+      75
+    ],
+    "verified": true
+  },
+  "rav-17996-tecken.mp4.pose": {
+    "word": "räv",
+    "signer": "signer_0",
+    "shapes": [
+      "Pekfingret",
+      "Raka måtthanden",
+      "Nyphanden"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      20,
+      32,
+      44,
+      58
+    ],
+    "verified": true
+  },
+  "utforsakrad-15188-tecken.mp4.pose": {
+    "word": "utförsäkrad",
+    "signer": "signer_0",
+    "shapes": [
+      "N-handen",
+      "L-handen",
+      "Flata handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      11,
+      14,
+      24,
+      43
+    ],
+    "verified": true
+  },
+  "nyanland-19369-tecken.mp4.pose": {
+    "word": "nyanländ",
+    "signer": "signer_0",
+    "shapes": [
+      "N-handen",
+      "Flata handen",
+      "Flata handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      18,
+      21,
+      33,
+      48
+    ],
+    "verified": true
+  },
+  "dodahavsrullar-06774-tecken.mp4.pose": {
+    "word": "dödahavsrullar",
+    "signer": "signer_6",
+    "shapes": [
+      "Vinkelhanden",
+      "Vinkelhanden",
+      "Tumvinkelhanden"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      12,
+      24,
+      33,
+      51
+    ],
+    "verified": true
+  },
+  "ta-slut-01111-tecken.mp4.pose": {
+    "word": "ta slut",
+    "signer": "signer_2",
+    "shapes": [
+      "Flata tumhanden",
+      "Flata tumhanden",
+      "A-handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      12,
+      17,
+      23,
+      40
+    ],
+    "verified": true
+  },
+  "postkolonialism-18444-tecken.mp4.pose": {
+    "word": "postkolonialism",
+    "signer": "signer_1",
+    "shapes": [
+      "Flata handen",
+      "Klohanden",
+      "Knutna handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      19,
+      39,
+      48,
+      71
+    ],
+    "verified": true
+  },
+  "folkhogskola-01894-tecken.mp4.pose": {
+    "word": "folkhögskola",
+    "signer": "signer_2",
+    "shapes": [
+      "Pekfingret",
+      "Flata handen",
+      "Flata handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      13,
+      20,
+      27,
+      48
+    ],
+    "verified": true
+  },
+  "tagstation-24805-tecken.mp4.pose": {
+    "word": "tågstation",
+    "signer": "signer_1",
+    "shapes": [
+      "Dubbelkroken",
+      "Måtthanden",
+      "Måtthanden"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      18,
+      28,
+      37,
+      57
+    ],
+    "verified": true
+  },
+  "askkopp-07689-tecken.mp4.pose": {
+    "word": "askkopp",
+    "signer": "signer_2",
+    "shapes": [
+      "V-handen",
+      "Raka måtthanden",
+      "Nyphanden"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      12,
+      24,
+      28,
+      47
+    ],
+    "verified": true
+  },
+  "stickprov-12766-tecken.mp4.pose": {
+    "word": "stickprov",
+    "signer": "signer_13",
+    "shapes": [
+      "Sprethanden",
+      "Stora nyphanden",
+      "Dubbelkroken"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      13,
+      17,
+      26,
+      53
+    ],
+    "verified": true
+  },
+  "fartygskock-15909-tecken.mp4.pose": {
+    "word": "fartygskock",
+    "signer": "signer_0",
+    "shapes": [
+      "Flata handen",
+      "Flata handen",
+      "Vinkelhanden"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      18,
+      31,
+      43,
+      55
+    ],
+    "verified": true
+  },
+  "pojkvan-12482-tecken.mp4.pose": {
+    "word": "pojkvän",
+    "signer": "signer_2",
+    "shapes": [
+      "Tumvinkelhanden",
+      "A-handen",
+      "S-handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      9,
+      16,
+      21,
+      45
+    ],
+    "verified": true
+  },
+  "beskattningsar-15351-tecken.mp4.pose": {
+    "word": "beskattningsår",
+    "signer": "signer_2",
+    "shapes": [
+      "Klohanden",
+      "Knutna handen",
+      "Pekfingret"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      11,
+      19,
+      31,
+      54
+    ],
+    "verified": true
+  },
+  "huvudman-09733-tecken.mp4.pose": {
+    "word": "huvudman",
+    "signer": "signer_12",
+    "shapes": [
+      "Pekfingret",
+      "Tumvinkelhanden",
+      "A-handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      9,
+      25,
+      31,
+      39
+    ],
+    "verified": true
+  },
+  "manillaskolan-07766-tecken.mp4.pose": {
+    "word": "Manillaskolan",
+    "signer": "signer_1",
+    "shapes": [
+      "Tumvinkelhanden",
+      "A-handen",
+      "Flata handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      12,
+      21,
+      27,
+      51
+    ],
+    "verified": true
+  },
+  "arbetslivsintroduktion-15068-tecken.mp4.pose": {
+    "word": "arbetslivsintroduktion",
+    "signer": "signer_0",
+    "shapes": [
+      "Knutna handen",
+      "Sprethanden",
+      "Pekfingret"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      18,
+      26,
+      43,
+      76
+    ],
+    "verified": true
+  },
+  "ideell-forening-14977-tecken.mp4.pose": {
+    "word": "ideell förening",
+    "signer": "signer_12",
+    "shapes": [
+      "Flata handen",
+      "Flata handen",
+      "Måtthanden"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      12,
+      15,
+      29,
+      50
+    ],
+    "verified": true
+  },
+  "horselvardskonsulent-24129-tecken.mp4.pose": {
+    "word": "hörselvårdskonsulent",
+    "signer": "signer_0",
+    "shapes": [
+      "Pekfingret",
+      "Sprethanden",
+      "Klohanden"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      22,
+      40,
+      65,
+      91
+    ],
+    "verified": true
+  },
+  "kollektivavtal-15427-tecken.mp4.pose": {
+    "word": "kollektivavtal",
+    "signer": "signer_0",
+    "shapes": [
+      "Tumhanden",
+      "Pekfingret",
+      "Flata handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      14,
+      34,
+      42,
+      65
+    ],
+    "verified": true
+  },
+  "sandefjord-24343-tecken.mp4.pose": {
+    "word": "Sandefjord",
+    "signer": "signer_1",
+    "shapes": [
+      "Flata tumhanden",
+      "A-handen",
+      "Flata handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      20,
+      27,
+      34,
+      62
+    ],
+    "verified": true
+  },
+  "standardmjolk-12076-tecken.mp4.pose": {
+    "word": "standardmjölk",
+    "signer": "signer_2",
+    "shapes": [
+      "V-handen",
+      "Klohanden",
+      "Knutna handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      12,
+      24,
+      27,
+      46
+    ],
+    "verified": true
+  },
+  "bror-09370-tecken.mp4.pose": {
+    "word": "bror",
+    "signer": "signer_16",
+    "shapes": [
+      "Tumvinkelhanden",
+      "A-handen",
+      "Krokfingret"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      13,
+      20,
+      24,
+      44
+    ],
+    "verified": true
+  },
+  "covid-19-19630-tecken.mp4.pose": {
+    "word": "covid-19",
+    "signer": "signer_0",
+    "shapes": [
+      "O-handen",
+      "4-handen",
+      "Knutna handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      14,
+      25,
+      36,
+      59
+    ],
+    "verified": true
+  },
+  "se-ut-05321-tecken.mp4.pose": {
+    "word": "se ut",
+    "signer": "signer_1",
+    "shapes": [
+      "V-handen",
+      "Flata tumhanden",
+      "A-handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      21,
+      30,
+      38,
+      55
+    ],
+    "verified": true
+  },
+  "manniskorov-10099-tecken.mp4.pose": {
+    "word": "människorov",
+    "signer": "signer_12",
+    "shapes": [
+      "Pekfingret",
+      "Klohanden",
+      "Knutna handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      12,
+      30,
+      37,
+      55
+    ],
+    "verified": true
+  },
+  "uppstallning-13100-tecken.mp4.pose": {
+    "word": "uppställning",
+    "signer": "signer_2",
+    "shapes": [
+      "Flata handen",
+      "Vinkelhanden",
+      "Hållhanden"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      10,
+      13,
+      16,
+      39
+    ],
+    "verified": true
+  },
+  "snapsvisa-19230-tecken.mp4.pose": {
+    "word": "snapsvisa",
+    "signer": "signer_1",
+    "shapes": [
+      "Nyphanden",
+      "L-handen",
+      "Flata handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      19,
+      33,
+      36,
+      68
+    ],
+    "verified": true
+  },
+  "de-vise-mannen-06755-tecken.mp4.pose": {
+    "word": "de vise männen",
+    "signer": "signer_6",
+    "shapes": [
+      "Krokfingret",
+      "Tumvinkelhanden",
+      "A-handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      10,
+      25,
+      32,
+      35
+    ],
+    "verified": true
+  },
+  "het-04790-tecken.mp4.pose": {
+    "word": "het",
+    "signer": "signer_2",
+    "shapes": [
+      "Flata handen",
+      "Flata handen",
+      "A-handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      12,
+      17,
+      20,
+      36
+    ],
+    "verified": true
+  },
+  "slutsald-19416-tecken.mp4.pose": {
+    "word": "slutsåld",
+    "signer": "signer_1",
+    "shapes": [
+      "Flata handen",
+      "Sprethanden",
+      "Knutna handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      17,
+      30,
+      38,
+      53
+    ],
+    "verified": true
+  },
+  "uttalande-18501-tecken.mp4.pose": {
+    "word": "uttalande",
+    "signer": "signer_1",
+    "shapes": [
+      "N-handen",
+      "L-handen",
+      "Pekfingret"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      17,
+      22,
+      27,
+      51
+    ],
+    "verified": true
+  },
+  "adelsman-07734-tecken.mp4.pose": {
+    "word": "adelsman",
+    "signer": "signer_2",
+    "shapes": [
+      "N-handen",
+      "Tumvinkelhanden",
+      "A-handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      12,
+      30,
+      38,
+      55
+    ],
+    "verified": true
+  },
+  "visstidsanstallning-18506-tecken.mp4.pose": {
+    "word": "visstidsanställning",
+    "signer": "signer_1",
+    "shapes": [
+      "Flata handen",
+      "Pekfingret",
+      "Böjda tupphanden"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      19,
+      30,
+      50,
+      70
+    ],
+    "verified": true
+  },
+  "tomteluva-19642-tecken.mp4.pose": {
+    "word": "tomteluva",
+    "signer": "signer_0",
+    "shapes": [
+      "Knutna handen",
+      "Flata tumhanden",
+      "A-handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      20,
+      40,
+      52,
+      62
+    ],
+    "verified": true
+  },
+  "konsumentavtal-09874-tecken.mp4.pose": {
+    "word": "konsumentavtal",
+    "signer": "signer_12",
+    "shapes": [
+      "Tumhanden",
+      "Pekfingret",
+      "Flata handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      15,
+      29,
+      35,
+      52
+    ],
+    "verified": true
+  },
+  "heltid-15120-tecken.mp4.pose": {
+    "word": "heltid",
+    "signer": "signer_0",
+    "shapes": [
+      "Stora hållhanden",
+      "Pekfingret",
+      "Pekfingret"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      9,
+      14,
+      23,
+      40
+    ],
+    "verified": true
+  },
+  "farbror-07540-tecken.mp4.pose": {
+    "word": "farbror",
+    "signer": "signer_2",
+    "shapes": [
+      "Pekfingret",
+      "Pekfingret",
+      "Krokfingret"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      11,
+      14,
+      17,
+      41
+    ],
+    "verified": true
+  },
+  "heltid-03907-tecken.mp4.pose": {
+    "word": "heltid",
+    "signer": "signer_2",
+    "shapes": [
+      "Sprethanden",
+      "Knutna handen",
+      "Pekfingret"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      15,
+      18,
+      21,
+      59
+    ],
+    "verified": true
+  },
+  "hammarby-if-15466-tecken.mp4.pose": {
+    "word": "Hammarby IF",
+    "signer": "signer_2",
+    "shapes": [
+      "Hållhanden",
+      "Tumhanden",
+      "Vinkelhanden"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      10,
+      21,
+      28,
+      42
+    ],
+    "verified": true
+  },
+  "apelsinsaft-02764-tecken.mp4.pose": {
+    "word": "apelsinsaft",
+    "signer": "signer_2",
+    "shapes": [
+      "Klohanden",
+      "Pekfingret",
+      "S-handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      12,
+      25,
+      34,
+      51
+    ],
+    "verified": true
+  },
+  "kristiansand-24330-tecken.mp4.pose": {
+    "word": "Kristiansand",
+    "signer": "signer_1",
+    "shapes": [
+      "K-handen",
+      "Flata tumhanden",
+      "A-handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      19,
+      37,
+      45,
+      65
+    ],
+    "verified": true
+  },
+  "andens-frukter-06680-tecken.mp4.pose": {
+    "word": "andens frukter",
+    "signer": "signer_6",
+    "shapes": [
+      "Sprethanden",
+      "A-handen",
+      "Knutna handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      13,
+      23,
+      27,
+      46
+    ],
+    "verified": true
+  },
+  "morbror-05083-tecken.mp4.pose": {
+    "word": "morbror",
+    "signer": "signer_2",
+    "shapes": [
+      "Flata handen",
+      "Flata handen",
+      "Krokfingret"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      11,
+      17,
+      22,
+      50
+    ],
+    "verified": true
+  },
+  "slidkramp-05957-tecken.mp4.pose": {
+    "word": "slidkramp",
+    "signer": "signer_10",
+    "shapes": [
+      "L-handen",
+      "Klohanden",
+      "Knutna handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      23,
+      36,
+      43,
+      57
+    ],
+    "verified": true
+  },
+  "tandfe-19069-tecken.mp4.pose": {
+    "word": "tandfe",
+    "signer": "signer_1",
+    "shapes": [
+      "Pekfingret",
+      "Stora hållhanden",
+      "E-handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      17,
+      28,
+      36,
+      59
+    ],
+    "verified": true
+  },
+  "predikatlogik-12693-tecken.mp4.pose": {
+    "word": "predikatlogik",
+    "signer": "signer_13",
+    "shapes": [
+      "Stora nyphanden",
+      "Pekfingret",
+      "Pekfingret"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      16,
+      33,
+      45,
+      61
+    ],
+    "verified": true
+  },
+  "potatisbullar-19206-tecken.mp4.pose": {
+    "word": "potatisbullar",
+    "signer": "signer_1",
+    "shapes": [
+      "Tumvinkelhanden",
+      "A-handen",
+      "Vinkelhanden"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      21,
+      29,
+      38,
+      67
+    ],
+    "verified": true
+  },
+  "uttalande-18209-tecken.mp4.pose": {
+    "word": "uttalande",
+    "signer": "signer_0",
+    "shapes": [
+      "N-handen",
+      "L-handen",
+      "Pekfingret"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      17,
+      24,
+      27,
+      62
+    ],
+    "verified": true
+  },
+  "potatismos-16449-tecken.mp4.pose": {
+    "word": "potatismos",
+    "signer": "signer_4",
+    "shapes": [
+      "Tumvinkelhanden",
+      "A-handen",
+      "Knutna handen"
+    ],
+    "n_phases": 3,
+    "boundaries": [
+      11,
+      16,
+      24,
+      42
+    ],
+    "verified": true
+  }
+}

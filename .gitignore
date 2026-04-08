@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.pt
+checkpoints/
+logs/*.log
+pseudo_signing.json
+description_parse_cache.json

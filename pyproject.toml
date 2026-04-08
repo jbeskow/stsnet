@@ -12,6 +12,7 @@ dependencies = [
     "numpy",
     "pose-format",
     "pyyaml",
+    "tqdm",
 ]
 
 [tool.setuptools.packages.find]

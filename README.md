@@ -9,10 +9,11 @@ For the v0.1 per-frame BiLSTM model see [README_v01.md](README_v01.md).
 
 ## What it predicts
 
-Given a short sign clip, the model predicts seven phonological properties:
+Seven phonological properties, trained from **per-clip labels** and queryable
+**per frame** at inference (see [Python API](#python-api)):
 
-| Head | Type | Labels |
-|------|------|--------|
+| Head | Train target | Labels |
+|------|-------------|--------|
 | shape (dom.) | multi-hot BCE | 42 dominant handshapes |
 | att (dom.) | multi-hot BCE | 34 orientation slugs |
 | contact_loc | multi-hot BCE | 22 contact locations |
@@ -21,8 +22,10 @@ Given a short sign clip, the model predicts seven phonological properties:
 | hand_type | CE | one / two |
 | nondom_shape | multi-hot BCE | 42 non-dominant handshapes (optional head) |
 
-Multi-hot targets allow signs with multiple phases (handform changes) to be
-represented correctly. Top-1 accuracy is used as the evaluation metric.
+Training uses one multi-hot target per clip — all properties that appear across
+any phase of the sign are active. At inference the same heads can be applied to
+individual frames, making it possible to track how predictions evolve through a
+sign or to scan continuous video without pre-defined boundaries.
 
 ## Architecture
 

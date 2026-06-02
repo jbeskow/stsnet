@@ -418,3 +418,78 @@ class ClipClassifierInference:
                 lengths=torch.tensor([T], dtype=torch.long, device=self.device),
             )
         return out["clip_emb"].squeeze(0).cpu().numpy()
+
+    def predict_frames(
+        self,
+        pose_path:  str | Path,
+        handedness: str = "right",
+    ) -> dict[str, list[str]] | None:
+        """
+        Per-frame phonological predictions over an entire clip.
+
+        The classification heads are applied directly to the per-frame fusion
+        features (before attention pooling), producing a label at every frame.
+        This is useful for visualising how predictions evolve through a sign,
+        or for scanning continuous video without pre-defined sign boundaries.
+
+        Returns:
+            dict mapping head name → list of T label strings.
+            Returns None if pose loading fails.
+        """
+        streams = self._load_streams(pose_path, handedness)
+        if streams is None:
+            return None
+
+        with torch.no_grad():
+            frame_feats = self.model.frame_features(
+                streams["dominant"], streams["nondominant"],
+                streams["body"], streams.get("face"),
+            )   # (1, T, D)
+            f = frame_feats.squeeze(0)   # (T, D)
+            logits = {
+                "shape":     self.model.shape_head(f),
+                "att":       self.model.att_head(f),
+                "cloc":      self.model.cloc_head(f),
+                "ctype":     self.model.ctype_head(f),
+                "motion":    self.model.motion_head(f),
+                "hand_type": self.model.hand_type_head(f),
+            }
+            if self.model.has_nondom_shape:
+                logits["nondom_shape"] = self.model.nondom_shape_head(f)
+
+        rev_maps = {
+            "shape":     self._idx_to_shape,
+            "att":       self._idx_to_att,
+            "motion":    self._idx_to_motion,
+            "cloc":      self._idx_to_cloc,
+            "ctype":     self._idx_to_ctype,
+            "hand_type": {0: "one", 1: "two"},
+            "nondom_shape": self._idx_to_shape,
+        }
+        result = {}
+        for name, lgt in logits.items():
+            indices = lgt.argmax(dim=-1).cpu().tolist()
+            rev = rev_maps.get(name, {})
+            result[name] = [rev.get(i, str(i)) for i in indices]
+        return result
+
+    def frame_features(
+        self,
+        pose_path:  str | Path,
+        handedness: str = "right",
+    ) -> np.ndarray | None:
+        """
+        Raw per-frame encoder features (T, 256) before attention pooling.
+
+        Useful as input to a downstream segmentation or spotting head.
+        Returns None if pose loading fails.
+        """
+        streams = self._load_streams(pose_path, handedness)
+        if streams is None:
+            return None
+        with torch.no_grad():
+            feats = self.model.frame_features(
+                streams["dominant"], streams["nondominant"],
+                streams["body"], streams.get("face"),
+            )
+        return feats.squeeze(0).cpu().numpy()   # (T, 256)

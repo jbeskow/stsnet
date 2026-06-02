@@ -55,18 +55,59 @@ Requires Python 3.10+, PyTorch 2.0+, and [pose-format](https://github.com/sign-l
 
 ## Python API
 
+Although the model is **trained clip-level** (one prediction per sign), at
+inference you can choose between clip-level and per-frame prediction modes.
+
 ```python
 from stsnet import ClipClassifierInference
 
 model = ClipClassifierInference("checkpoints/stsnet_v02.pt", device="cuda")
+```
 
-# Predict phonological properties for a sign window
+### Clip-level prediction (one label set per sign)
+
+The attention pool aggregates frame features over the sign window into a single
+256-dim embedding, and the heads predict one label per property:
+
+```python
 props = model.predict_phonology("clip.pose", sign_start=12, sign_end=58)
 # {"shape": "Flata handen", "att": "vänsterriktad-nedåtvänd",
 #  "cloc": "none", "ctype": "none", "motion": "none",
 #  "hand_type": "one", "nondom_shape": "..."}
+```
 
-# 256-dim clip embedding for retrieval / clustering
+`sign_start` / `sign_end` are optional — if omitted, attention spans the whole clip.
+
+### Per-frame prediction (one label set per frame)
+
+The same classification heads are applied directly to the pre-pool per-frame
+features, producing a label at every frame. Useful for visualising how
+predictions evolve through a sign, or for scanning continuous video without
+pre-defined sign boundaries:
+
+```python
+frames = model.predict_frames("continuous_video.pose")
+# {"shape":  ["Flata handen", "Flata handen", ..., "Krokfingret", ...],
+#  "att":    [...],
+#  "motion": [...],
+#  ...}   # one entry per frame, length = T
+```
+
+### Per-frame feature vectors
+
+Raw 256-dim encoder features before pooling — suitable as input to a downstream
+segmentation or sign-spotting head:
+
+```python
+feats = model.frame_features("continuous_video.pose")
+# np.ndarray shape (T, 256)
+```
+
+### Clip embedding
+
+256-dim pooled embedding for retrieval or clustering:
+
+```python
 emb = model.embed_clip("clip.pose", sign_start=12, sign_end=58)
 # np.ndarray shape (256,)
 ```

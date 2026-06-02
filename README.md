@@ -9,18 +9,19 @@ For the v0.1 per-frame BiLSTM model see [README_v01.md](README_v01.md).
 
 ## What it predicts
 
-Seven phonological properties, trained from **per-clip labels** and queryable
+Eight phonological properties, trained from **per-clip labels** and queryable
 **per frame** at inference (see [Python API](#python-api)):
 
-| Head | Train target | Labels |
-|------|-------------|--------|
-| shape (dom.) | multi-hot BCE | 42 dominant handshapes |
-| att (dom.) | multi-hot BCE | 34 orientation slugs |
-| contact_loc | multi-hot BCE | 22 contact locations |
-| contact_type | multi-hot BCE | 4 contact types |
-| motion | multi-hot BCE | 8 motion directions (incl. none) |
-| hand_type | CE | one / two |
-| nondom_shape | multi-hot BCE | 42 non-dominant handshapes (optional head) |
+| Head | Target | Classes |
+|------|--------|---------|
+| shape (dom.) | multi-hot BCE | <details><summary>42 handshapes</summary>Flata handen · D-handen · Flata tumhanden · Sprethanden · 4-handen · Vinkelhanden · Tumvinkelhanden · A-handen · S-handen · Klohanden · O-handen · Knutna handen · E-handen · Tumhanden · Pekfingret · L-handen · Raka måtthanden · Nyphanden · Nyphanden (alt) · T-handen · Krokfingret · Måtthanden · Hållhanden · Långfingret · N-handen · Lilla O-handen · Lilla O-handen (alt) · V-handen · Tupphanden · K-handen · Dubbelkroken · Böjda tupphanden · M-handen · W-handen · Lillfingret · U-handen · Flyghanden · Stora långfingret · Runda långfingret · Stora nyphanden · Stora hållhanden · X-handen</details> |
+| att (dom.) | multi-hot BCE | <details><summary>34 orientations</summary>framåtriktad-framåtvänd · framåtriktad-högervänd · framåtriktad-inåtvänd · framåtriktad-nedåtvänd · framåtriktad-uppåtvänd · framåtriktad-vänstervänd · högerriktad-framåtvänd · högerriktad-högervänd · högerriktad-inåtvänd · högerriktad-nedåtvänd · högerriktad-uppåtvänd · högerriktad-vänstervänd · inåtriktad-högervänd · inåtriktad-inåtvänd · inåtriktad-nedåtvänd · inåtriktad-uppåtvänd · inåtriktad-vänstervänd · nedåtriktad-framåtvänd · nedåtriktad-högervänd · nedåtriktad-inåtvänd · nedåtriktad-nedåtvänd · nedåtriktad-uppåtvänd · nedåtriktad-vänstervänd · uppåtriktad-framåtvänd · uppåtriktad-högervänd · uppåtriktad-inåtvänd · uppåtriktad-uppåtvänd · uppåtriktad-vänstervänd · vänsterriktad-framåtvänd · vänsterriktad-högervänd · vänsterriktad-inåtvänd · vänsterriktad-nedåtvänd · vänsterriktad-uppåtvänd · vänsterriktad-vänstervänd</details> |
+| contact_loc | multi-hot BCE | <details><summary>22 locations</summary>none · mouth · chin · nose · forehead · cheek · ear · top_of_head · face · head · neck · chest · stomach · hip · shoulder · upper_arm · forearm · elbow · wrist · other_hand · temple · back</details> |
+| contact_type | multi-hot BCE | <details><summary>4 types</summary>none · single · repeated · sustained</details> |
+| motion | multi-hot BCE | <details><summary>8 directions</summary>none · nedåt · uppåt · framåt · bakåt · åt_höger · åt_vänster · inåt</details> |
+| hand_type | CE | <details><summary>2 classes</summary>one · two</details> |
+| nondom_shape | multi-hot BCE | <details><summary>42 handshapes (optional)</summary>Same vocabulary as shape (dom.)</details> |
+| nondom_att | multi-hot BCE | <details><summary>34 orientations (optional)</summary>Same vocabulary as att (dom.)</details> |
 
 Training uses one multi-hot target per clip — all properties that appear across
 any phase of the sign are active. At inference the same heads can be applied to
@@ -35,7 +36,7 @@ through a `FrameEncoder` (linear projection → 3 × temporal Conv1d, residual).
 The four 256-dim outputs are fused by a linear MLP and then aggregated by
 **masked attention pooling** — attention scores outside the annotated sign window
 are forced to −∞, so the pooled 256-dim clip embedding represents only the core
-signing portion. Seven classification heads operate on this embedding.
+signing portion. Eight classification heads operate on this embedding.
 
 Optional additional streams: WiLoR 3D MANO joints (`wilor_dom`, `wilor_nondom`),
 DINOv2 CLS tokens (`dino`), Moryossef rotation-normalised hands (`dom_norm`, `nondom_norm`),
@@ -76,7 +77,7 @@ The attention pool aggregates frame features over the sign window into a single
 props = model.predict_phonology("clip.pose", sign_start=12, sign_end=58)
 # {"shape": "Flata handen", "att": "vänsterriktad-nedåtvänd",
 #  "cloc": "none", "ctype": "none", "motion": "none",
-#  "hand_type": "one", "nondom_shape": "..."}
+#  "hand_type": "one", "nondom_shape": "...", "nondom_att": "..."}
 ```
 
 `sign_start` / `sign_end` are optional — if omitted, attention spans the whole clip.
@@ -142,6 +143,7 @@ Key options:
 | `--dropout` | 0.2 | Dropout rate |
 | `--no_z` | off | Use 2D (xy) pose only |
 | `--nondom_shape_head` | off | Enable non-dominant handshape head |
+| `--nondom_att_head` | off | Enable non-dominant attitude head |
 | `--ckpt` | None | Warm-start encoders from v0.1 checkpoint |
 | `--wilor_dir` | None | Add WiLoR 3D hand streams |
 | `--dino_dir` | None | Add DINOv2 CLS token stream |
@@ -178,12 +180,13 @@ SSLL phonological targets.
 | Property | SSLL only | +mined SSLC |
 |----------|-----------|-------------|
 | Handshape (dom.) | 79.9% | **85.1%** |
-| Attitude | 75.9% | **79.3%** |
+| Attitude (dom.) | 75.9% | **79.3%** |
 | Contact location | 78.3% | **80.6%** |
 | Contact type | 72.3% | **76.8%** |
 | Motion direction | 57.4% | **62.4%** |
 | Hand type | 96.6% | **97.1%** |
 | Handshape (nondom.) | 81.3% | **85.7%** |
+| Attitude (nondom.) | — | — |
 
 ---
 

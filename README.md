@@ -1,39 +1,51 @@
 # STS-Net
 
-Per-frame multi-head sign language phonology model for Swedish Sign Language (STS).
-Predicts nine phonological features simultaneously from MediaPipe pose streams:
+Phonological property prediction for Swedish Sign Language (STS) from pose keypoints.
 
-| Head | Labels |
-|------|--------|
-| state | rest / prep / sign / retract |
-| shape | 42 dominant handshapes |
-| att | 34 attitude (orientation) slugs |
-| hand_type | one / two |
-| contact_loc | 22 contact locations |
-| contact_type | 4 contact types |
-| motion | 7 motion directions |
-| nondom_shape | 42 non-dominant handshapes |
-| nondom_att | 34 non-dominant attitudes |
+**Current version: v0.2** — clip-level attention-pooled model (`ClipClassifier`).
+For the v0.1 per-frame BiLSTM model see [README_v01.md](README_v01.md).
+
+---
+
+## What it predicts
+
+Given a short sign clip, the model predicts seven phonological properties:
+
+| Head | Type | Labels |
+|------|------|--------|
+| shape (dom.) | multi-hot BCE | 42 dominant handshapes |
+| att (dom.) | multi-hot BCE | 34 orientation slugs |
+| contact_loc | multi-hot BCE | 22 contact locations |
+| contact_type | multi-hot BCE | 4 contact types |
+| motion | multi-hot BCE | 8 motion directions (incl. none) |
+| hand_type | CE | one / two |
+| nondom_shape | multi-hot BCE | 42 non-dominant handshapes (optional head) |
+
+Multi-hot targets allow signs with multiple phases (handform changes) to be
+represented correctly. Top-1 accuracy is used as the evaluation metric.
 
 ## Architecture
 
-![STS-Net architecture](docs/architecture.png)
+Each clip is encoded through four MediaPipe pose streams (dominant hand 21 kpts,
+non-dominant hand 21 kpts, upper body 12 kpts, face 25 kpts). Each stream passes
+through a `FrameEncoder` (linear projection → 3 × temporal Conv1d, residual).
+The four 256-dim outputs are fused by a linear MLP and then aggregated by
+**masked attention pooling** — attention scores outside the annotated sign window
+are forced to −∞, so the pooled 256-dim clip embedding represents only the core
+signing portion. Seven classification heads operate on this embedding.
 
-Each pose stream (dominant hand, non-dominant hand, body, face) is encoded independently
-by a shared-weight `FrameEncoder` (linear projection → 3 × temporal conv blocks).
-The four stream representations are concatenated and fused through a linear layer + LayerNorm.
-An optional BiLSTM adds temporal context. Nine linear heads produce per-frame predictions.
+Optional additional streams: WiLoR 3D MANO joints (`wilor_dom`, `wilor_nondom`),
+DINOv2 CLS tokens (`dino`), Moryossef rotation-normalised hands (`dom_norm`, `nondom_norm`),
+or a Sapiens whole-body stream in place of MediaPipe.
 
-During the alignment bootstrap (training rounds 1–N) the BiLSTM is omitted — peakier
-frame-level emissions produce sharper Viterbi boundaries. The final model adds the BiLSTM
-for smoother per-frame inference.
+Total parameters: ~4.3 M.
 
 ## Installation
 
 ```bash
 git clone git@github.com:jbeskow/stsnet.git
 cd stsnet
-git lfs pull                          # download checkpoint (~213 MB)
+git lfs pull          # download v0.1 checkpoint (~213 MB) if needed
 pip install -e .
 ```
 
@@ -41,218 +53,144 @@ Requires Python 3.10+, PyTorch 2.0+, and [pose-format](https://github.com/sign-l
 
 ---
 
-## Quick start: run the base model
-
-The pretrained checkpoint (`checkpoints/stsnet_base.pt`) was trained on SSLL using
-the cold-start recipe below.
-
-### Per-frame predictions
-
-```bash
-python scripts/predict.py path/to/clip.pose \
-    --ckpt checkpoints/stsnet_base.pt \
-    --device cuda
-```
-
-Output (truncated):
-
-```
-frame  state  shape         att                     hand_type  ...
------  -----  ------------  ----------------------  ---------
-0      rest   Flata handen  vänsterriktad-nedåtvänd  one
-1      rest   Flata handen  vänsterriktad-nedåtvänd  one
-6      prep   Flata handen  vänsterriktad-nedåtvänd  one
-...
-```
-
-Select specific heads with `--heads`:
-
-```bash
-python scripts/predict.py clip.pose --heads state shape att
-```
-
-Print a frame range with `--start` / `--end`:
-
-```bash
-python scripts/predict.py clip.pose --start 10 --end 40
-```
-
-### Viterbi alignment
-
-Given a sign description and the signing window boundaries (from `pseudo_signing.json`):
-
-```bash
-python scripts/predict.py clip.pose \
-    --ckpt checkpoints/stsnet_base.pt \
-    --description "Flata handen, vänsterriktad och nedåtvänd, upprepade kontakter med hjässan" \
-    --sign_start 12 --sign_end 58
-```
-
-Output:
-
-```
-label         start  end
-------------  -----  ---
-rest          0      12
-__prep__      12     17
-Flata handen  17     49
-__retract__   49     58
-rest          58     72
-```
-
-### Python API
+## Python API
 
 ```python
-from stsnet.inference import STSNetInference
+from stsnet import ClipClassifierInference
 
-model = STSNetInference("checkpoints/stsnet_base.pt", device="cuda")
+model = ClipClassifierInference("checkpoints/stsnet_v02.pt", device="cuda")
 
-# Per-frame label strings for all heads
-preds = model.predict_clip_decoded("clip.pose")
-# {"state": ["rest", "rest", ..., "prep", ...], "shape": [...], ...}
+# Predict phonological properties for a sign window
+props = model.predict_phonology("clip.pose", sign_start=12, sign_end=58)
+# {"shape": "Flata handen", "att": "vänsterriktad-nedåtvänd",
+#  "cloc": "none", "ctype": "none", "motion": "none",
+#  "hand_type": "one", "nondom_shape": "..."}
 
-# Viterbi segmentation
-segs = model.align_clip(
-    "clip.pose",
-    description="Flata handen, vänsterriktad och nedåtvänd",
-    sign_start=12,
-    sign_end=58,
-)
-# [("rest", 0, 12), ("__prep__", 12, 17), ("Flata handen", 17, 49), ...]
+# 256-dim clip embedding for retrieval / clustering
+emb = model.embed_clip("clip.pose", sign_start=12, sign_end=58)
+# np.ndarray shape (256,)
 ```
 
 ---
 
-## Cold-start training
-
-The full pipeline trains from scratch using only the SSLL dataset (mp4 videos + metadata CSV).
-No pre-trained models or existing alignments are needed.
+## Training
 
 ### Prerequisites
 
-- SSLL dataset: `sign_data.csv`, mp4 videos, and a corresponding `signer_map.csv`
-  (maps video filenames to signer IDs; see `data/signer_map.csv` for the format)
-- Edit `config/default.yaml` to set `data.csv_path`, `data.pose_dir`, `data.cache_dir`
+- SSLL dataset: `sign_data_with_signer_fr.csv`, `.pose` files, `pseudo_signing.json`
+  (see [README_v01.md](README_v01.md) for pose extraction and pseudo-signing steps)
+- Pose cache built with `cache_poses.py` (see CLAUDE.md)
 
-### Step 0 — Extract pose files
-
-```bash
-python scripts/extract_pose.py \
-    --csv_path  /path/to/SSLL/sign_data.csv \
-    --video_dir /path/to/SSLL \
-    --pose_dir  /path/to/SSLL/pose \
-    --workers   4
-```
-
-This runs MediaPipe Holistic via `video_to_pose` on every clip listed in the CSV.
-Already-extracted files are skipped, so it is safe to re-run.
-
-### Step 1 — Cache pose arrays (optional, speeds up training)
+### Train on SSLL only
 
 ```bash
-python scripts/cache_poses.py \
-    --pose_dir  /path/to/SSLL/pose \
-    --cache_dir /path/to/SSLL/pose_cache
+CUDA_VISIBLE_DEVICES=0 conda run -n slp python -u scripts/train_clip.py \
+    --out runs/clip_v02
 ```
 
-### Step 2 — Compute sign windows
+Key options:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--streams` | `dom nondom body face` | Input streams to use |
+| `--hidden_dim` | 256 | Encoder channel width |
+| `--epochs` | 60 | Training epochs |
+| `--dropout` | 0.2 | Dropout rate |
+| `--no_z` | off | Use 2D (xy) pose only |
+| `--nondom_shape_head` | off | Enable non-dominant handshape head |
+| `--ckpt` | None | Warm-start encoders from v0.1 checkpoint |
+| `--wilor_dir` | None | Add WiLoR 3D hand streams |
+| `--dino_dir` | None | Add DINOv2 CLS token stream |
+
+Checkpoint saved to `runs/clip_v02/best.pt` (includes vocab metadata).
+
+### Mine SSLC and re-train
+
+Transfer phonological labels from SSLL to unannotated continuous-signing data
+via nearest-neighbour embedding matching:
 
 ```bash
-python scripts/generate_pseudo_signing.py \
-    --csv_path  /path/to/SSLL/sign_data.csv \
-    --cache_dir /path/to/SSLL/pose_cache \
-    --out       pseudo_signing.json
+# Step 1: mine SSLC
+CUDA_VISIBLE_DEVICES=0 conda run -n slp python -u scripts/mine_sslc.py \
+    --clip_ckpt runs/clip_v02/best.pt \
+    --threshold 0.4 \
+    --out runs/sslc_mined.json
+
+# Step 2: re-train with mined data + stronger regularisation
+CUDA_VISIBLE_DEVICES=0 conda run -n slp python -u scripts/train_clip.py \
+    --out runs/clip_v02_mined \
+    --clip_ckpt runs/clip_v02/best.pt \
+    --mined_json runs/sslc_mined.json \
+    --dropout 0.3 --noise_std 0.02 --label_smoothing 0.1 \
+    --time_stretch_min 0.85 --time_stretch_max 1.15
 ```
 
-This detects prep/retract boundaries heuristically from wrist velocity profiles,
-producing a JSON file with per-clip sign windows used by the recipe.
+Mining selects SSLC gloss windows whose embedding (cosine distance) to the nearest
+SSLL training variant is below `--threshold`. Mined instances carry the matched
+SSLL phonological targets.
 
-### Step 3 — Run the full recipe
+### Performance (MediaPipe baseline, SSLL val set)
 
-```bash
-python scripts/recipe.py --gpu 0
-```
-
-The recipe runs automatically:
-
-| Round | Action |
-|-------|--------|
-| 0 | Generate seed alignment (heuristic prep/retract + equal-split shapes) |
-| 1–N | Train STSNet (no BiLSTM) → re-align with multi-head Viterbi → repeat until Δ mIoU < 0.005 |
-| Final | Train STSNet (BiLSTM) on converged alignment |
-
-Progress is logged in real time to `runs/recipe_progress.log`:
-
-```
-[07:58:08] Seed alignment: 18732 clips written
-[07:58:10]   seed: 2ph mIoU=0.690  3ph mIoU=0.538  ALL mIoU=0.609  MAE=3.1f  n=88/100
-[07:58:10] Round 1: train noBiLSTM → align
-...
-```
-
-Checkpoints are saved to `checkpoints/stsnet_recipe/`.
-
-### Step 4 — Evaluate alignment
-
-```bash
-python scripts/evaluate.py checkpoints/stsnet_recipe/align_recipe_final_bilstm.csv \
-    --annotations data/annotations2.json \
-    --test_list   data/test_list2.json
-```
-
-### Base model performance
-
-Trained on SSLL with the cold-start recipe (val set, final BiLSTM checkpoint):
-
-| Head | Val accuracy |
-|------|-------------|
-| state | 0.973 |
-| shape | 0.816 |
-| att | 0.766 |
-| hand_type | 0.959 |
-| contact_loc | 0.778 |
-| contact_type | 0.704 |
-| motion | 0.654 |
-| nondom_shape | 0.856 |
-| nondom_att | 0.778 |
-
-Alignment on 100-clip test set: mIoU = 0.609 (seed) → converged after 3 rounds.
+| Property | SSLL only | +mined SSLC |
+|----------|-----------|-------------|
+| Handshape (dom.) | 79.9% | **85.1%** |
+| Attitude | 75.9% | **79.3%** |
+| Contact location | 78.3% | **80.6%** |
+| Contact type | 72.3% | **76.8%** |
+| Motion direction | 57.4% | **62.4%** |
+| Hand type | 96.6% | **97.1%** |
+| Handshape (nondom.) | 81.3% | **85.7%** |
 
 ---
 
 ## Repository layout
 
 ```
-stsnet/               importable package
-  model.py            STSNet model definition
-  encoder.py          FrameEncoder (temporal conv + optional BiLSTM)
-  viterbi.py          blank-free Viterbi forced alignment
-  inference.py        STSNetInference API
-  train_utils.py      loss, accuracy, data collation helpers
+stsnet/                      package
+  __init__.py                exports STSNet (v0.1), ClipClassifier (v0.2), both Inference APIs
+  clip_classifier.py         ClipClassifier + AttentionPool  ← v0.2 default model
+  model.py                   STSNet (per-frame BiLSTM)       ← v0.1
+  encoder.py                 FrameEncoder, DinoEncoder, TemporalConvBlock
+  inference.py               ClipClassifierInference (v0.2), STSNetInference (v0.1)
+  train_utils.py             loss / accuracy helpers
+  viterbi.py                 blank-free Viterbi forced alignment (v0.1)
   data/
-    pose_io.py        MediaPipe pose loading and normalization
-    description.py    Swedish sign description parser
-    contact.py        contact location/type vocabulary
-    multihead.py      SSLLMultiHeadDataset (per-frame label dataset)
-    align_dataset.py  STSAlignDataset + multi-head emission builder
+    pose_io.py               MediaPipe loading, load_wilor_streams, normalize_hand_moryossef
+    ssll_clip.py             SSLLClipDataset, collate_clip, load_sapiens_streams
+    sslc_mined.py            SSLCMinedDataset (mined SSLC gloss clips)
+    description.py           Swedish sign description parser
+    contact.py               contact location / type vocabularies
+    multihead.py             SSLLMultiHeadDataset (per-frame, used by v0.1)
+    align_dataset.py         STSAlignDataset + emission builder (used by v0.1)
 scripts/
-  predict.py          run inference on a .pose file
-  train.py            train a single model
-  align.py            re-align a dataset with a trained checkpoint
-  evaluate.py         score alignment against manual annotations
-  recipe.py           full cold-start training recipe
-  extract_pose.py     extract MediaPipe pose from mp4 files
-  generate_pseudo_signing.py  compute sign windows from pose
-  make_seed_alignment.py      generate initial equal-split alignment
+  train_clip.py              train ClipClassifier v0.2       (stsnet-train-clip)
+  mine_sslc.py               mine SSLC via embedding matching (stsnet-mine)
+  train.py                   train STSNet v0.1               (stsnet-train)
+  predict.py                 per-frame inference on .pose file
+  align.py                   re-align a dataset
+  evaluate.py                score alignment vs. manual annotations
+  recipe.py                  full v0.1 cold-start recipe
+  extract_pose.py            extract MediaPipe pose from mp4
+  generate_pseudo_signing.py compute sign windows from pose
+  make_seed_alignment.py     initial equal-split alignment
 checkpoints/
-  stsnet_base.pt      pretrained base model (Git LFS)
+  stsnet_base.pt             v0.1 pretrained checkpoint (Git LFS, ~213 MB)
 data/
-  signer_map.csv      video_id → signer mapping
-  sts_handformer.txt  handshape vocabulary (42 classes)
-  annotations2.json   100-clip manual boundary annotations (test set)
-  test_list2.json     test set clip list
+  sts_handformer.txt         handshape vocabulary (42 classes)
+  annotations2.json          100-clip manual boundary annotations (test set)
+  test_list2.json            test set clip list
+  signer_map.csv             video_id → signer mapping
 config/
-  default.yaml        all hyperparameters
+  default.yaml               v0.1 training hyperparameters
 tests/
-  test_viterbi.py     unit tests for ctc_forced_align
+  test_viterbi.py            unit tests for ctc_forced_align
 ```
+
+---
+
+## v0.1 model
+
+The v0.1 per-frame BiLSTM model (`STSNet`) predicts nine phonological features
+per frame and supports Viterbi forced alignment for timeline annotation.
+See [README_v01.md](README_v01.md) for full documentation and the pretrained
+checkpoint at `checkpoints/stsnet_base.pt`.

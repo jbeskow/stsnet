@@ -3,6 +3,10 @@ Pose loading utilities for STS-Net.
 
 Loads and normalises MediaPipe Holistic pose files into per-stream arrays
 for dominant hand, non-dominant hand, body, and face.
+
+Also provides:
+  load_wilor_streams:      load WiLoR 3D MANO hand joints from .npz
+  normalize_hand_moryossef: per-frame 3D hand normalisation (Moryossef et al.)
 """
 
 from pathlib import Path
@@ -211,3 +215,139 @@ def load_pose_streams(
         face[..., 0]        = -face[..., 0]
 
     return {"dominant": dominant, "nondominant": nondominant, "body": body, "face": face}
+
+
+# ---------------------------------------------------------------------------
+# WiLoR 3D hand streams
+# ---------------------------------------------------------------------------
+
+_WILOR_RIGHT_IDX = 1
+_WILOR_LEFT_IDX  = 0
+_WILOR_MCP_IDX   = 9   # MIDDLE_MCP index — used as scale reference
+
+
+def load_wilor_streams(
+    pose_path:   Path,
+    wilor_dir:   Path,
+    handedness:  str,
+    mirror_left: bool = True,
+) -> dict[str, np.ndarray] | None:
+    """
+    Load WiLoR 3D hand joints and return normalised streams.
+
+    Returns:
+        'wilor_dom'    (T, 21, 3)  dominant hand, wrist-centred + MCP-normalised
+        'wilor_nondom' (T, 21, 3)  non-dominant hand, same normalisation
+    Returns None if the WiLoR .npz file does not exist.
+
+    Normalisation:
+      1. Center at wrist (joint 0)
+      2. Divide by per-clip median wrist-to-MIDDLE_MCP distance
+      3. Mirror x for left-handed signers (if mirror_left=True)
+      4. Invalid frames (hand_valid=False) → NaN
+    """
+    video_name = pose_path.name.removesuffix(".pose").removesuffix(".mp4")
+    wilor_path = wilor_dir / (video_name + ".npz")
+    if not wilor_path.exists():
+        return None
+
+    d = np.load(wilor_path)
+    joints = d["joints_3d"].astype(np.float32)   # (T, 2, 21, 3)
+    valid  = d["hand_valid"]                      # (T, 2) bool
+
+    dom_idx, nondom_idx = (
+        (_WILOR_LEFT_IDX, _WILOR_RIGHT_IDX) if handedness == "left"
+        else (_WILOR_RIGHT_IDX, _WILOR_LEFT_IDX)
+    )
+
+    dom    = joints[:, dom_idx,    :, :].copy()
+    nondom = joints[:, nondom_idx, :, :].copy()
+
+    dom[~valid[:, dom_idx]]       = np.nan
+    nondom[~valid[:, nondom_idx]] = np.nan
+
+    dom    -= dom[:, 0:1, :]
+    nondom -= nondom[:, 0:1, :]
+
+    mcp_dist = np.sqrt((dom[:, _WILOR_MCP_IDX, :] ** 2).sum(axis=-1))
+    scale = float(np.nanmedian(mcp_dist))
+    if scale < 1e-6:
+        scale = 1.0
+    dom    /= scale
+    nondom /= scale
+
+    if handedness == "left" and mirror_left:
+        dom[..., 0]    = -dom[..., 0]
+        nondom[..., 0] = -nondom[..., 0]
+
+    return {"wilor_dom": dom, "wilor_nondom": nondom}
+
+
+# ---------------------------------------------------------------------------
+# Moryossef per-frame 3D hand normalisation
+# ---------------------------------------------------------------------------
+
+_HAND_INDEX_MCP  = 5
+_HAND_MIDDLE_MCP = 9
+_HAND_PINKY_MCP  = 17
+
+
+def _rot_align_to_z(v: np.ndarray) -> np.ndarray:
+    """Rotation matrix that aligns unit vector v to +Z."""
+    z = np.array([0.0, 0.0, 1.0])
+    axis = np.cross(v, z)
+    s = float(np.linalg.norm(axis))
+    c = float(np.dot(v, z))
+    if s < 1e-6:
+        return np.eye(3) if c > 0 else np.diag([1.0, -1.0, -1.0])
+    axis /= s
+    K = np.array([[0, -axis[2], axis[1]],
+                  [axis[2], 0, -axis[0]],
+                  [-axis[1], axis[0], 0]])
+    return np.eye(3) + s * K + (1 - c) * K @ K
+
+
+def _rot_z(angle: float) -> np.ndarray:
+    """Rotation matrix around Z by angle (radians)."""
+    c, s = np.cos(angle), np.sin(angle)
+    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+
+
+def normalize_hand_moryossef(joints: np.ndarray) -> np.ndarray:
+    """
+    Per-frame 3D hand normalisation (Moryossef et al., 2023).
+
+    For each frame:
+      1. Wrist-center (joint 0 → origin)
+      2. Rotate so palm normal → +Z  (back of hand on XY plane)
+      3. Rotate around Z so middle metacarpal → +Y axis
+      4. Scale so the middle metacarpal has unit length
+
+    Input/output: (T, 21, 3) float32.  NaN frames are left unchanged.
+    Works on both MediaPipe and MANO/WiLoR 21-joint hands.
+    """
+    out = joints.copy()
+    for t in range(len(out)):
+        frame = out[t]
+        if np.any(np.isnan(frame)):
+            continue
+
+        frame = frame - frame[0]
+
+        normal = np.cross(frame[_HAND_INDEX_MCP], frame[_HAND_PINKY_MCP])
+        n = float(np.linalg.norm(normal))
+        if n < 1e-6:
+            out[t] = frame
+            continue
+        frame = frame @ _rot_align_to_z(normal / n).T
+
+        mid = frame[_HAND_MIDDLE_MCP]
+        frame = frame @ _rot_z(-np.arctan2(mid[0], mid[1])).T
+
+        mid_len = float(np.linalg.norm(frame[_HAND_MIDDLE_MCP]))
+        if mid_len > 1e-6:
+            frame = frame / mid_len
+
+        out[t] = frame
+
+    return out.astype(np.float32)

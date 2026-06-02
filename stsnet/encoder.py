@@ -3,6 +3,7 @@ Pose stream encoder components for STS-Net.
 
 TemporalConvBlock: single Conv1d layer with residual connection.
 FrameEncoder: encodes one pose stream (B, T, J, 3) -> (B, T, D).
+DinoEncoder: encodes flat feature stream (B, T, D_in) -> (B, T, D).
 """
 
 import torch
@@ -76,3 +77,37 @@ class FrameEncoder(nn.Module):
         feat   = self.temporal_convs(feat.transpose(1, 2)).transpose(1, 2)  # (B, T, D)
         feat   = feat * valid.unsqueeze(-1)             # zero invalid frames
         return feat
+
+
+class DinoEncoder(nn.Module):
+    """
+    Encodes flat per-frame features (B, T, D_in) -> (B, T, D).
+
+    Used for DINOv2 (D_in=1024) or any other flat feature stream.
+    No NaN masking — assumes features are always valid.
+    """
+
+    def __init__(
+        self,
+        in_dim:      int,
+        hidden_dim:  int = 256,
+        conv_layers: int = 3,
+        kernel_size: int = 5,
+        dropout:     float = 0.2,
+    ):
+        super().__init__()
+        self.frame_proj = nn.Sequential(
+            nn.Linear(in_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+        )
+        self.temporal_convs = nn.Sequential(
+            *[TemporalConvBlock(hidden_dim, kernel_size, dropout) for _ in range(conv_layers)]
+        )
+        self.out_dim = hidden_dim
+
+    def forward(self, x: Tensor) -> Tensor:
+        """x: (B, T, D_in)  ->  (B, T, D)"""
+        h = self.frame_proj(x)
+        return self.temporal_convs(h.transpose(1, 2)).transpose(1, 2)

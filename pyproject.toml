@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stsnet"
-version = "0.1.0"
-description = "STS-Net: multi-head sign language phonology model"
+version = "0.2.0"
+description = "STS-Net: clip-level sign language phonology model"
 requires-python = ">=3.10"
 dependencies = [
     "torch>=2.0",
@@ -18,7 +18,9 @@ dependencies = [
 include = ["stsnet*", "scripts*"]
 
 [project.scripts]
-stsnet-train    = "scripts.train:main"
-stsnet-align    = "scripts.align:main"
-stsnet-evaluate = "scripts.evaluate:main"
-stsnet-recipe   = "scripts.recipe:main"
+stsnet-train       = "scripts.train:main"
+stsnet-train-clip  = "scripts.train_clip:main"
+stsnet-mine        = "scripts.mine_sslc:main"
+stsnet-align       = "scripts.align:main"
+stsnet-evaluate    = "scripts.evaluate:main"
+stsnet-recipe      = "scripts.recipe:main"

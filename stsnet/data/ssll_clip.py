@@ -298,6 +298,7 @@ class SSLLClipDataset(Dataset):
         shape_t        = torch.zeros(self.num_shapes)
         nondom_shape_t = torch.zeros(self.num_shapes)
         att_t          = torch.zeros(self.num_atts)
+        nondom_att_t   = torch.zeros(self.num_atts)
         cloc_t         = torch.zeros(self.num_cloc)
         ctype_t        = torch.zeros(self.num_ctype)
         motion_t       = torch.zeros(self.num_motion)
@@ -310,6 +311,8 @@ class SSLLClipDataset(Dataset):
                 nondom_shape_t[self.shape_to_idx[nondom_shape]] = 1.0
             if att is not None and att in self.att_to_idx:
                 att_t[self.att_to_idx[att]] = 1.0
+            if nondom_att is not None and nondom_att in self.att_to_idx:
+                nondom_att_t[self.att_to_idx[nondom_att]] = 1.0
             if cloc is not None and cloc in self.cloc_to_idx:
                 cloc_t[self.cloc_to_idx[cloc]] = 1.0
             if ctype is not None and ctype in self.ctype_to_idx:
@@ -330,6 +333,7 @@ class SSLLClipDataset(Dataset):
             "shape_target":        shape_t,
             "nondom_shape_target": nondom_shape_t,
             "att_target":          att_t,
+            "nondom_att_target":   nondom_att_t,
             "cloc_target":         cloc_t,
             "ctype_target":        ctype_t,
             "motion_target":       motion_t,
@@ -416,7 +420,8 @@ class SSLLClipDataset(Dataset):
         item["word"]       = s["word"]
 
         for key in ("shape_target", "nondom_shape_target", "att_target",
-                    "cloc_target", "ctype_target", "motion_target", "hand_type"):
+                    "nondom_att_target", "cloc_target", "ctype_target",
+                    "motion_target", "hand_type"):
             item[key] = s[key]
 
         if self.n_coords < 3:
@@ -449,7 +454,7 @@ def collate_clip(batch: list[dict]) -> dict:
     str_keys    = {"signer", "word"}
     scalar_keys = {"sign_start", "sign_end", "hand_type"}
     target_keys = {"shape_target", "nondom_shape_target", "att_target",
-                   "cloc_target", "ctype_target", "motion_target"}
+                   "nondom_att_target", "cloc_target", "ctype_target", "motion_target"}
     fixed_keys  = str_keys | scalar_keys | target_keys
 
     all_keys = set(batch[0])

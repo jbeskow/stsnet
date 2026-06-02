@@ -129,6 +129,7 @@ def sample_targets(s: dict) -> dict:
         "shape_target":        s["shape_target"].tolist(),
         "nondom_shape_target": s["nondom_shape_target"].tolist(),
         "att_target":          s["att_target"].tolist(),
+        "nondom_att_target":   s["nondom_att_target"].tolist(),
         "cloc_target":         s["cloc_target"].tolist(),
         "ctype_target":        s["ctype_target"].tolist(),
         "motion_target":       s["motion_target"].tolist(),

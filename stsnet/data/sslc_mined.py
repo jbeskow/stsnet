@@ -71,6 +71,8 @@ class SSLCMinedDataset(Dataset):
                 "nondom_shape_target": torch.tensor(
                     r.get("nondom_shape_target", [0.0] * n_shapes), dtype=torch.float),
                 "att_target":          torch.tensor(r["att_target"],    dtype=torch.float),
+                "nondom_att_target":   torch.tensor(
+                    r.get("nondom_att_target", [0.0] * len(r["att_target"])), dtype=torch.float),
                 "cloc_target":         torch.tensor(r["cloc_target"],   dtype=torch.float),
                 "ctype_target":        torch.tensor(r["ctype_target"],  dtype=torch.float),
                 "motion_target":       torch.tensor(r["motion_target"], dtype=torch.float),
@@ -121,7 +123,8 @@ class SSLCMinedDataset(Dataset):
         item["word"]       = s["gloss"]
 
         for key in ("shape_target", "nondom_shape_target", "att_target",
-                    "cloc_target", "ctype_target", "motion_target", "hand_type"):
+                    "nondom_att_target", "cloc_target", "ctype_target",
+                    "motion_target", "hand_type"):
             item[key] = s[key]
 
         if self.noise_std > 0.0 and self._training:

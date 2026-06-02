@@ -134,6 +134,7 @@ def main():
     ap.add_argument("--no_z",             action="store_true",
                     help="Use 2D (xy) pose only — strip depth coordinate")
     ap.add_argument("--nondom_shape_head", action="store_true")
+    ap.add_argument("--nondom_att_head",   action="store_true")
     ap.add_argument("--mined_json",   default=None,
                     help="Path to sslc_mined.json (extends training set)")
     ap.add_argument("--pose_cache",   default="/nfs/signbot1/data/SSLL/pose_cache")
@@ -216,6 +217,7 @@ def main():
         n_face           = 68 if args.sapiens_dir else 25,
         n_dims           = 2 if args.no_z else 3,
         has_nondom_shape = args.nondom_shape_head,
+        has_nondom_att   = args.nondom_att_head,
     )
 
     model = ClipClassifier(**vocab_sizes)
@@ -260,7 +262,7 @@ def main():
     HEAD_WEIGHTS = {
         "shape": 1.0, "att": 1.0, "hand_type": 0.5,
         "cloc": 0.5, "ctype": 0.5, "motion": 0.5,
-        "nondom_shape": 0.5,
+        "nondom_shape": 0.5, "nondom_att": 0.5,
     }
 
     for epoch in range(1, args.epochs + 1):
@@ -294,6 +296,9 @@ def main():
             if args.nondom_shape_head:
                 loss = loss + HEAD_WEIGHTS["nondom_shape"] * bce_loss(
                     out["nondom_shape_logits"], batch["nondom_shape_target"].to(device), ls)
+            if args.nondom_att_head:
+                loss = loss + HEAD_WEIGHTS["nondom_att"] * bce_loss(
+                    out["nondom_att_logits"], batch["nondom_att_target"].to(device), ls)
 
             opt.zero_grad()
             loss.backward()
@@ -305,7 +310,7 @@ def main():
         sched.step()
 
         model.eval()
-        val_loss = shape_acc = att_acc = ht_acc = nondom_shape_acc = 0.0
+        val_loss = shape_acc = att_acc = ht_acc = nondom_shape_acc = nondom_att_acc = 0.0
         n_val = 0
 
         with torch.no_grad():
@@ -339,6 +344,11 @@ def main():
                     loss = loss + HEAD_WEIGHTS["nondom_shape"] * bce_loss(
                         out["nondom_shape_logits"], ns_t)
                     nondom_shape_acc += bce_accuracy(out["nondom_shape_logits"], ns_t)
+                if args.nondom_att_head:
+                    na_t = batch["nondom_att_target"].to(device)
+                    loss = loss + HEAD_WEIGHTS["nondom_att"] * bce_loss(
+                        out["nondom_att_logits"], na_t)
+                    nondom_att_acc += bce_accuracy(out["nondom_att_logits"], na_t)
 
                 val_loss  += loss.item()
                 shape_acc += bce_accuracy(out["shape_logits"], s_t)
@@ -351,6 +361,7 @@ def main():
         att_acc          /= n_val
         ht_acc           /= n_val
         nondom_shape_acc /= n_val
+        nondom_att_acc   /= n_val
 
         writer.add_scalar("loss/train", train_loss, epoch)
         writer.add_scalar("loss/val",   val_loss,   epoch)
@@ -360,8 +371,14 @@ def main():
         writer.add_scalar("lr", sched.get_last_lr()[0], epoch)
         if args.nondom_shape_head:
             writer.add_scalar("acc/nondom_shape", nondom_shape_acc, epoch)
+        if args.nondom_att_head:
+            writer.add_scalar("acc/nondom_att", nondom_att_acc, epoch)
 
-        nd_str = f"  nd_shape={nondom_shape_acc:.3f}" if args.nondom_shape_head else ""
+        nd_str = ""
+        if args.nondom_shape_head:
+            nd_str += f"  nd_shape={nondom_shape_acc:.3f}"
+        if args.nondom_att_head:
+            nd_str += f"  nd_att={nondom_att_acc:.3f}"
         print(f"Ep {epoch:3d}/{args.epochs}  "
               f"train={train_loss:.4f}  val={val_loss:.4f}  "
               f"shape={shape_acc:.3f}  att={att_acc:.3f}  ht={ht_acc:.3f}{nd_str}")

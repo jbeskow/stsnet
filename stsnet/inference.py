@@ -378,6 +378,7 @@ class ClipClassifierInference:
             "motion_logits":     "motion",
             "hand_type_logits":  "hand_type",
             "nondom_shape_logits": "nondom_shape",
+            "nondom_att_logits":   "nondom_att",
         }
         for logit_key, name in key_names.items():
             if logit_key not in out:
@@ -456,6 +457,8 @@ class ClipClassifierInference:
             }
             if self.model.has_nondom_shape:
                 logits["nondom_shape"] = self.model.nondom_shape_head(f)
+            if self.model.has_nondom_att:
+                logits["nondom_att"] = self.model.nondom_att_head(f)
 
         rev_maps = {
             "shape":     self._idx_to_shape,
@@ -465,6 +468,7 @@ class ClipClassifierInference:
             "ctype":     self._idx_to_ctype,
             "hand_type": {0: "one", 1: "two"},
             "nondom_shape": self._idx_to_shape,
+            "nondom_att":   self._idx_to_att,
         }
         result = {}
         for name, lgt in logits.items():

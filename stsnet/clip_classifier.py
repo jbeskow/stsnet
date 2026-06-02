@@ -99,6 +99,7 @@ class ClipClassifier(nn.Module):
         n_face:           int = 25,
         n_dims:           int = 3,
         has_nondom_shape: bool = False,
+        has_nondom_att:   bool = False,
     ):
         super().__init__()
         self.streams = tuple(dict.fromkeys(streams))
@@ -136,6 +137,9 @@ class ClipClassifier(nn.Module):
         self.has_nondom_shape = has_nondom_shape
         if has_nondom_shape:
             self.nondom_shape_head = nn.Linear(D, num_shapes)
+        self.has_nondom_att = has_nondom_att
+        if has_nondom_att:
+            self.nondom_att_head = nn.Linear(D, num_atts)
 
     def _make_sign_mask(
         self,
@@ -208,6 +212,8 @@ class ClipClassifier(nn.Module):
         }
         if self.has_nondom_shape:
             out["nondom_shape_logits"] = self.nondom_shape_head(clip_emb)
+        if self.has_nondom_att:
+            out["nondom_att_logits"] = self.nondom_att_head(clip_emb)
         return out
 
     @classmethod

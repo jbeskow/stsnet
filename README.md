@@ -30,13 +30,45 @@ sign or to scan continuous video without pre-defined boundaries.
 
 ## Architecture
 
-Each clip is encoded through four MediaPipe pose streams (dominant hand 21 kpts,
-non-dominant hand 21 kpts, upper body 12 kpts, face 25 kpts). Each stream passes
-through a `FrameEncoder` (linear projection → 3 × temporal Conv1d, residual).
-The four 256-dim outputs are fused by a linear MLP and then aggregated by
-**masked attention pooling** — attention scores outside the annotated sign window
-are forced to −∞, so the pooled 256-dim clip embedding represents only the core
-signing portion. Eight classification heads operate on this embedding.
+```mermaid
+flowchart TD
+    subgraph streams["Input  ·  T frames"]
+        d["dominant hand\n21 kpts × 3D"]
+        nd["non-dominant hand\n21 kpts × 3D"]
+        b["upper body\n12 kpts × 3D"]
+        f["face\n25 kpts × 3D"]
+    end
+
+    d  --> fe1["FrameEncoder\nLinear → 3× Conv1d residual\n→ T × 256"]
+    nd --> fe2["FrameEncoder\nLinear → 3× Conv1d residual\n→ T × 256"]
+    b  --> fe3["FrameEncoder\nLinear → 3× Conv1d residual\n→ T × 256"]
+    f  --> fe4["FrameEncoder\nLinear → 3× Conv1d residual\n→ T × 256"]
+
+    fe1 & fe2 & fe3 & fe4 --> fuse["Fusion MLP\nconcat T×1024  →  T×256"]
+
+    fuse --> pool["Masked AttentionPool\nscores outside sign window → −∞\n→ 256-dim clip embedding"]
+
+    subgraph dom["Dominant"]
+        h1["shape\n42  multi-hot BCE"]
+        h2["attitude\n34  multi-hot BCE"]
+    end
+    subgraph shared["Shared"]
+        h3["contact location\n22  multi-hot BCE"]
+        h4["contact type\n4  multi-hot BCE"]
+        h5["motion\n8  multi-hot BCE"]
+        h6["hand type\n2  CE"]
+    end
+    subgraph nondom["Non-dominant  (optional)"]
+        h7["shape\n42  multi-hot BCE"]
+        h8["attitude\n34  multi-hot BCE"]
+    end
+
+    pool --> dom
+    pool --> shared
+    pool --> nondom
+```
+
+Each stream passes through a `FrameEncoder` (linear projection → LayerNorm + ReLU → 3 × temporal Conv1d with residual connections). The four 256-dim per-frame outputs are concatenated and fused by a linear MLP, then aggregated by **masked attention pooling** — attention scores outside the annotated sign window are forced to −∞, so the pooled embedding represents only the core signing portion. Eight classification heads operate on the 256-dim clip embedding; the two non-dominant heads are optional and enabled at training time.
 
 Optional additional streams: WiLoR 3D MANO joints (`wilor_dom`, `wilor_nondom`),
 DINOv2 CLS tokens (`dino`), Moryossef rotation-normalised hands (`dom_norm`, `nondom_norm`),

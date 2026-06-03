@@ -211,14 +211,17 @@ SSLL phonological targets.
 
 | Property | SSLL only | +mined SSLC |
 |----------|-----------|-------------|
-| Handshape (dom.) | 79.9% | **85.1%** |
-| Attitude (dom.) | 75.9% | **79.3%** |
-| Contact location | 78.3% | **80.6%** |
-| Contact type | 72.3% | **76.8%** |
-| Motion direction | 57.4% | **62.4%** |
-| Hand type | 96.6% | **97.1%** |
-| Handshape (nondom.) | 81.3% | **85.7%** |
-| Attitude (nondom.) | — | — |
+| Handshape (dom.) | 77.8% | **84.7%** |
+| Attitude (dom.) | 75.2% | **78.8%** |
+| Contact location | — | — |
+| Contact type | — | — |
+| Motion direction | — | — |
+| Hand type | 96.6% | **96.9%** |
+| Handshape (nondom.) | 80.7% | **86.2%** |
+| Attitude (nondom.) | 75.6% | **78.8%** |
+
+SSLL-only = `clip_nd_att_base` (ep 29 best). +mined = `clip_nd_att_combined_v3` (17,833 SSLC clips, ep 60).
+Contact/motion accuracies not yet re-evaluated for this model series.
 
 ---
 

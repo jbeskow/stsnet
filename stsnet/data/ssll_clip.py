@@ -36,6 +36,21 @@ MOTION_DIRECTIONS: list[str] = [
     "none", "nedåt", "uppåt", "framåt", "bakåt", "åt_höger", "åt_vänster", "inåt"
 ]
 
+# Attitude slugs that are physically impossible (same-axis or anti-parallel
+# riktad/vänd combinations) and appear only as annotation/parsing errors.
+BLOCKED_ATTS: frozenset[str] = frozenset({
+    "framåtriktad-framåtvänd",
+    "framåtriktad-inåtvänd",
+    "nedåtriktad-nedåtvänd",
+    "nedåtriktad-uppåtvänd",
+    "uppåtriktad-uppåtvänd",
+    "inåtriktad-inåtvänd",
+    "högerriktad-högervänd",
+    "högerriktad-vänstervänd",
+    "vänsterriktad-vänstervänd",
+    "vänsterriktad-högervänd",
+})
+
 
 def load_sapiens_streams(
     npz_path: Path,
@@ -239,9 +254,9 @@ class SSLLClipDataset(Dataset):
                     nondom_can = self._match_shape(nondom_shape) if nondom_shape else None
                     phases.append((canonical, att, hand_type, cloc, ctype,
                                    motion, nondom_can, nondom_att))
-                    if att is not None:
+                    if att is not None and att not in BLOCKED_ATTS:
                         att_vocab.setdefault(att, len(att_vocab))
-                    if nondom_att is not None:
+                    if nondom_att is not None and nondom_att not in BLOCKED_ATTS:
                         att_vocab.setdefault(nondom_att, len(att_vocab))
 
                 if not phases:

@@ -3,7 +3,8 @@
 Phonological property prediction for Swedish Sign Language (STS) from pose keypoints.
 
 **Current version: v0.2** — clip-level attention-pooled model (`ClipClassifier`).
-For the v0.1 per-frame BiLSTM model see [README_v01.md](README_v01.md).
+v0.1 and v0.2 are incompatible model families and live in separate trees.
+For the v0.1 per-frame BiLSTM model see [v0.1/README.md](v0.1/README.md).
 
 ---
 
@@ -155,7 +156,7 @@ emb = model.embed_clip("clip.pose", sign_start=12, sign_end=58)
 ### Prerequisites
 
 - SSLL dataset: `sign_data_with_signer_fr.csv`, `.pose` files, `pseudo_signing.json`
-  (see [README_v01.md](README_v01.md) for pose extraction and pseudo-signing steps)
+  (see [v0.1/README.md](v0.1/README.md) for pose extraction and pseudo-signing steps)
 - Pose cache built with `cache_poses.py` (see CLAUDE.md)
 
 ### Train on SSLL only
@@ -227,45 +228,30 @@ Contact/motion accuracies not yet re-evaluated for this model series.
 
 ## Repository layout
 
+This tree holds v0.2 only. The incompatible v0.1 model lives standalone
+under [`v0.1/`](v0.1/) — its own `stsnet` package, scripts, checkpoint,
+data, and `pip install -e .`; see [v0.1/README.md](v0.1/README.md).
+
 ```
-stsnet/                      package
-  __init__.py                exports STSNet (v0.1), ClipClassifier (v0.2), both Inference APIs
-  clip_classifier.py         ClipClassifier + AttentionPool  ← v0.2 default model
-  model.py                   STSNet (per-frame BiLSTM)       ← v0.1
+stsnet/                      v0.2 package
+  __init__.py                exports ClipClassifier, ClipClassifierInference
+  clip_classifier.py         ClipClassifier + AttentionPool  ← default model
   encoder.py                 FrameEncoder, DinoEncoder, TemporalConvBlock
-  inference.py               ClipClassifierInference (v0.2), STSNetInference (v0.1)
-  train_utils.py             loss / accuracy helpers
-  viterbi.py                 blank-free Viterbi forced alignment (v0.1)
+  inference.py               ClipClassifierInference
   data/
     pose_io.py               MediaPipe loading, load_wilor_streams, normalize_hand_moryossef
-    ssll_clip.py             SSLLClipDataset, collate_clip, load_sapiens_streams
+    ssll_clip.py              SSLLClipDataset, collate_clip, load_sapiens_streams
     sslc_mined.py            SSLCMinedDataset (mined SSLC gloss clips)
     description.py           Swedish sign description parser
     contact.py               contact location / type vocabularies
-    multihead.py             SSLLMultiHeadDataset (per-frame, used by v0.1)
-    align_dataset.py         STSAlignDataset + emission builder (used by v0.1)
 scripts/
-  train_clip.py              train ClipClassifier v0.2       (stsnet-train-clip)
+  train_clip.py              train ClipClassifier       (stsnet-train-clip)
   mine_sslc.py               mine SSLC via embedding matching (stsnet-mine)
-  train.py                   train STSNet v0.1               (stsnet-train)
-  predict.py                 per-frame inference on .pose file
-  align.py                   re-align a dataset
-  evaluate.py                score alignment vs. manual annotations
-  recipe.py                  full v0.1 cold-start recipe
-  extract_pose.py            extract MediaPipe pose from mp4
-  generate_pseudo_signing.py compute sign windows from pose
-  make_seed_alignment.py     initial equal-split alignment
 checkpoints/
-  stsnet_base.pt             v0.1 pretrained checkpoint (Git LFS, ~213 MB)
+  stsnet_v02.pt               pretrained v0.2 checkpoint (Git LFS)
 data/
   sts_handformer.txt         handshape vocabulary (42 classes)
-  annotations2.json          100-clip manual boundary annotations (test set)
-  test_list2.json            test set clip list
-  signer_map.csv             video_id → signer mapping
-config/
-  default.yaml               v0.1 training hyperparameters
-tests/
-  test_viterbi.py            unit tests for ctc_forced_align
+v0.1/                        standalone v0.1 tree — own package, scripts, checkpoint, data
 ```
 
 ---
@@ -273,6 +259,7 @@ tests/
 ## v0.1 model
 
 The v0.1 per-frame BiLSTM model (`STSNet`) predicts nine phonological features
-per frame and supports Viterbi forced alignment for timeline annotation.
-See [README_v01.md](README_v01.md) for full documentation and the pretrained
-checkpoint at `checkpoints/stsnet_base.pt`.
+per frame and supports Viterbi forced alignment for timeline annotation. It is
+a separate, incompatible package rooted at [`v0.1/`](v0.1/) — see
+[v0.1/README.md](v0.1/README.md) for full documentation and the pretrained
+checkpoint at `v0.1/checkpoints/stsnet_base.pt`.

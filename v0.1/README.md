@@ -1,6 +1,9 @@
-# STS-Net
+# STS-Net v0.1
 
 Per-frame multi-head sign language phonology model for Swedish Sign Language (STS).
+This is a standalone tree, incompatible with the v0.2 model at the [repo root](../README.md) —
+it has its own `stsnet` package, scripts, checkpoint, and data, and should be installed
+into its own environment (`pip install -e .` from inside this directory).
 Predicts nine phonological features simultaneously from MediaPipe pose streams:
 
 | Head | Labels |
@@ -32,7 +35,7 @@ for smoother per-frame inference.
 
 ```bash
 git clone git@github.com:jbeskow/stsnet.git
-cd stsnet
+cd stsnet/v0.1
 git lfs pull                          # download checkpoint (~213 MB)
 pip install -e .
 ```

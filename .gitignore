@@ -6,7 +6,10 @@ dist/
 build/
 .eggs/
 checkpoints/*
-!checkpoints/stsnet_base.pt
+!checkpoints/stsnet_v02.pt
+v0.1/checkpoints/*
+!v0.1/checkpoints/stsnet_base.pt
 logs/*.log
+v0.1/logs/*.log
 pseudo_signing.json
 description_parse_cache.json

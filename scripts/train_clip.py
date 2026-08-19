@@ -15,7 +15,7 @@ Usage:
 Warm-start from v0.1 STSNet checkpoint:
     conda run -n slp python -u scripts/train_clip.py \\
         --out runs/clip_v02_warm \\
-        --ckpt checkpoints/stsnet_base.pt
+        --ckpt v0.1/checkpoints/stsnet_base.pt
 
 Resume / fine-tune from an existing ClipClassifier checkpoint:
     conda run -n slp python -u scripts/train_clip.py \\

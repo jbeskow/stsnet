@@ -20,3 +20,4 @@ include = ["stsnet*", "scripts*"]
 [project.scripts]
 stsnet-train-clip  = "scripts.train_clip:main"
 stsnet-mine        = "scripts.mine_sslc:main"
+stsnet-predict     = "scripts.predict:main"

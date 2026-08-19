@@ -93,12 +93,14 @@ class ClipClassifierInference:
             )
 
         rev_maps = {
-            "shape_logits":     self._idx_to_shape,
-            "att_logits":       self._idx_to_att,
-            "motion_logits":    self._idx_to_motion,
-            "cloc_logits":      self._idx_to_cloc,
-            "ctype_logits":     self._idx_to_ctype,
-            "hand_type_logits": {0: "one", 1: "two"},
+            "shape_logits":        self._idx_to_shape,
+            "att_logits":          self._idx_to_att,
+            "motion_logits":       self._idx_to_motion,
+            "cloc_logits":         self._idx_to_cloc,
+            "ctype_logits":        self._idx_to_ctype,
+            "hand_type_logits":    {0: "one", 1: "two"},
+            "nondom_shape_logits": self._idx_to_shape,
+            "nondom_att_logits":   self._idx_to_att,
         }
         result = {}
         key_names = {

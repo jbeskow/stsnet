@@ -151,6 +151,41 @@ emb = model.embed_clip("clip.pose", sign_start=12, sign_end=58)
 
 ---
 
+## Command-line prediction
+
+`scripts/predict.py` (`stsnet-predict`) runs inference on a `.pose` file or a
+video (`.mp4`, `.mov`, `.avi`, `.mkv`, `.webm` — pose is extracted via
+`video_to_pose` first) and writes CSV.
+
+Per-frame predictions, CSV to stdout:
+
+```bash
+python scripts/predict.py clip.pose --ckpt checkpoints/stsnet_v02.pt
+```
+
+```
+frame,shape,att,cloc,ctype,motion,hand_type,nondom_shape,nondom_att
+0,Flata handen,vänsterriktad-nedåtvänd,none,none,none,one,...
+1,Flata handen,vänsterriktad-nedåtvänd,none,none,none,one,...
+```
+
+Clip-level prediction for a single sign (`--sign_start`/`--sign_end`), written to a file:
+
+```bash
+python scripts/predict.py clip.pose --sign_start 12 --sign_end 58 --out preds.csv
+```
+
+Per-frame encoder embeddings `(T, 256)` alongside the CSV, saved as a `.pt` tensor:
+
+```bash
+python scripts/predict.py clip.pose --out preds.csv --embeddings feats.pt
+```
+
+Other flags: `--heads` (restrict to specific heads), `--start`/`--end` (frame
+range for per-frame output), `--handedness`, `--device`.
+
+---
+
 ## Training
 
 ### Prerequisites
@@ -247,6 +282,7 @@ stsnet/                      v0.2 package
 scripts/
   train_clip.py              train ClipClassifier       (stsnet-train-clip)
   mine_sslc.py               mine SSLC via embedding matching (stsnet-mine)
+  predict.py                 CSV predictions + per-frame embeddings (stsnet-predict)
 checkpoints/
   stsnet_v02.pt               pretrained v0.2 checkpoint (Git LFS)
 data/

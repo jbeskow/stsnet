@@ -12,6 +12,7 @@ dependencies = [
     "numpy",
     "pose-format",
     "pyyaml",
+    "flask",
 ]
 
 [tool.setuptools.packages.find]
@@ -21,3 +22,4 @@ include = ["stsnet*", "scripts*"]
 stsnet-train-clip  = "scripts.train_clip:main"
 stsnet-mine        = "scripts.mine_sslc:main"
 stsnet-predict     = "scripts.predict:main"
+stsnet-inspect     = "scripts.inspector:main"

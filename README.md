@@ -186,6 +186,26 @@ range for per-frame output), `--handedness`, `--device`.
 
 ---
 
+## Interactive inspector
+
+`scripts/inspector.py` (`stsnet-inspect`) is a small Flask web GUI for
+browsing predictions on a handful of clips: a file list, a video player, and
+a collapsible per-frame activation heatmap for every head (plus the
+attention trace), synced to the video playhead. Takes video or `.pose` files
+directly on the command line — no CSV or dataset metadata required.
+
+```bash
+python scripts/inspector.py clip1.mp4 clip2.mp4 clip3.pose \
+    --ckpt checkpoints/stsnet_v02.pt --port 7860
+```
+
+Open `http://localhost:7860/`, pick a clip from the sidebar, and click a
+section header to collapse/expand its heatmap. Videos are pose-extracted
+once (via `video_to_pose`) and cached alongside the source file, or under
+`--pose_cache_dir` if given; `.pose` files are used as-is.
+
+---
+
 ## Training
 
 ### Prerequisites
@@ -283,6 +303,7 @@ scripts/
   train_clip.py              train ClipClassifier       (stsnet-train-clip)
   mine_sslc.py               mine SSLC via embedding matching (stsnet-mine)
   predict.py                 CSV predictions + per-frame embeddings (stsnet-predict)
+  inspector.py               interactive activation-heatmap web GUI (stsnet-inspect)
 checkpoints/
   stsnet_v02.pt               pretrained v0.2 checkpoint (Git LFS)
 data/

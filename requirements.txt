@@ -1,0 +1,13 @@
+# Core dependencies for STS-Net v0.2 (top-level tree).
+# Kept in sync with the [project.dependencies] list in pyproject.toml — that
+# file is the source of truth; this one exists so the project can be set up
+# with `pip install -r requirements.txt` / `uv pip install -r requirements.txt`
+# without a full `pip install -e .` build step.
+#
+# For v0.1, see v0.1/requirements.txt instead.
+
+torch>=2.0
+numpy
+pose-format
+pyyaml
+flask

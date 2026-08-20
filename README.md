@@ -204,6 +204,15 @@ section header to collapse/expand its heatmap. Videos are pose-extracted
 once (via `video_to_pose`) and cached alongside the source file, or under
 `--pose_cache_dir` if given; `.pose` files are used as-is.
 
+More clips can be added at any time by dragging video (or `.pose`) files
+onto the browser window — each is uploaded with a live progress bar, then
+pose-extracted in the background (shown as an "Extracting pose…" row) and
+added to the sidebar once ready. The command-line `videos` argument is
+optional, so the server can also be started empty (`python scripts/inspector.py
+--ckpt ...`) and populated entirely by drag-and-drop. Uploaded files are
+saved under `--upload_dir` (default: a temp directory); pass `--no_upload`
+to disable the feature.
+
 ---
 
 ## Training

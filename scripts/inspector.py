@@ -6,8 +6,12 @@ through the model, and serves a web GUI showing the video alongside
 per-frame activation heatmaps for every head, plus the attention trace —
 synced to the video playhead. No CSV / dataset metadata required.
 
+Additional clips can be added at any time by dragging video files onto the
+browser window — they're uploaded, pose-extracted in the background (with a
+progress indicator), and appear in the sidebar once ready.
+
 Usage:
-    python scripts/inspect.py clip1.mp4 clip2.mp4 clip3.pose \\
+    python scripts/inspector.py clip1.mp4 clip2.mp4 clip3.pose \\
         --ckpt checkpoints/stsnet_v02.pt
 """
 
@@ -16,7 +20,10 @@ import mimetypes
 import re
 import subprocess
 import sys
+import tempfile
+import threading
 import time
+import uuid
 from pathlib import Path
 
 import numpy as np
@@ -25,18 +32,23 @@ import torch.nn.functional as F
 from flask import Flask, Response, jsonify, render_template_string, request
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024 * 1024  # 2 GB upload cap
 
 VIDEO_SUFFIXES = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
+UPLOAD_SUFFIXES = VIDEO_SUFFIXES | {".pose"}
 
 # ---------------------------------------------------------------------------
 # Global state (populated in main())
 # ---------------------------------------------------------------------------
-CLIPS: list[dict] = []          # [{idx, name, video_path, pose_path}]
+CLIPS: list[dict] = []          # [{idx, name, video_path, pose_path, status}]
+CLIPS_LOCK = threading.Lock()   # guards CLIPS during background uploads
 MODEL   = None
 VOCAB: dict = {}                # idx_to_shape/att/motion/cloc/ctype
 DEVICE  = torch.device("cpu")
 HANDEDNESS = "right"
 ACT_CACHE: dict[int, dict] = {}
+UPLOAD_DIR: Path | None = None      # where drag-and-dropped files are saved
+POSE_CACHE_DIR: Path | None = None  # where their extracted .pose files go
 
 
 # ---------------------------------------------------------------------------
@@ -59,18 +71,75 @@ def extract_pose(video_path: Path, pose_path: Path) -> bool:
     return True
 
 
+def _extract_worker(idx: int, video_path: Path, pose_path: Path) -> None:
+    """Background-thread target: extract pose for an uploaded clip, then
+    update its CLIPS entry in place."""
+    ok = extract_pose(video_path, pose_path)
+    with CLIPS_LOCK:
+        CLIPS[idx]["pose_path"] = pose_path if ok else None
+        CLIPS[idx]["status"] = "ready" if ok else "failed"
+
+
 # ---------------------------------------------------------------------------
 # Flask routes — API
 # ---------------------------------------------------------------------------
 
 @app.route("/api/clips")
 def api_clips():
-    return jsonify([
-        {"idx": c["idx"], "name": c["name"],
-         "has_pose": c["pose_path"] is not None,
-         "has_video": c["video_path"] is not None}
-        for c in CLIPS
-    ])
+    out = []
+    for c in CLIPS:
+        entry = {"idx": c["idx"], "name": c["name"],
+                  "has_pose": c["pose_path"] is not None,
+                  "has_video": c["video_path"] is not None,
+                  "status": c.get("status", "ready")}
+        if entry["status"] == "extracting":
+            entry["elapsed"] = round(time.time() - c.get("started", time.time()), 1)
+        out.append(entry)
+    return jsonify(out)
+
+
+@app.route("/api/upload", methods=["POST"])
+def api_upload():
+    if UPLOAD_DIR is None:
+        return jsonify({"error": "uploads not enabled"}), 400
+    f = request.files.get("file")
+    if f is None or not f.filename:
+        return jsonify({"error": "no file in request"}), 400
+
+    name   = Path(f.filename).name
+    suffix = Path(name).suffix.lower()
+    if suffix not in UPLOAD_SUFFIXES:
+        return jsonify({"error": f"unsupported file type: {suffix or '(none)'}"}), 400
+
+    dest = UPLOAD_DIR / name
+    if dest.exists():
+        dest = UPLOAD_DIR / f"{uuid.uuid4().hex[:8]}_{name}"
+    f.save(dest)
+
+    with CLIPS_LOCK:
+        idx = len(CLIPS)
+        if suffix == ".pose":
+            CLIPS.append({"idx": idx, "name": name, "video_path": None,
+                          "pose_path": dest, "status": "ready"})
+        else:
+            cache_dir = POSE_CACHE_DIR or UPLOAD_DIR
+            pose_path = cache_dir / (dest.name + ".pose")
+            CLIPS.append({"idx": idx, "name": name, "video_path": dest,
+                          "pose_path": None, "status": "extracting",
+                          "started": time.time()})
+        status = CLIPS[idx]["status"]
+
+    if status == "extracting":
+        threading.Thread(
+            target=_extract_worker, args=(idx, dest, pose_path), daemon=True
+        ).start()
+
+    return jsonify({"idx": idx, "name": name, "status": status})
+
+
+@app.errorhandler(413)
+def _too_large(e):
+    return jsonify({"error": "file too large"}), 413
 
 
 @app.route("/api/clip/<int:idx>/activations")
@@ -272,7 +341,7 @@ body {
 #count { font-size: 11px; color: #888; flex-shrink: 0; }
 
 /* ── main layout ── */
-#main { display: flex; flex: 1; min-height: 0; }
+#main { display: flex; flex: 1; min-height: 0; position: relative; }
 
 /* ── sidebar ── */
 #sidebar { width: 260px; flex-shrink: 0; overflow-y: auto; border-right: 1px solid #0f3460; }
@@ -280,6 +349,35 @@ body {
 .clip-item:hover { background: #16213e; }
 .clip-item.active { background: #0f3460; border-left: 3px solid #e94560; }
 .clip-item.no-pose { color: #666; cursor: not-allowed; }
+.clip-item.status-extracting { color: #f0c060; cursor: default; }
+.clip-item.status-failed { color: #e94560; cursor: default; }
+.clip-item.uploading { color: #9ab; cursor: default; }
+
+/* ── upload progress ── */
+.upload-progress-wrap { margin-top: 4px; }
+.upload-status-text { font-size: 10px; color: #999; margin-bottom: 3px; }
+.upload-progress-bar-bg { height: 4px; border-radius: 2px; background: #0f3460; overflow: hidden; }
+.upload-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg,#e94560,#f0c060); border-radius: 2px; transition: width 0.2s ease; }
+.upload-progress-bar.indeterminate {
+  width: 35% !important;
+  animation: indet 1.1s ease-in-out infinite;
+}
+@keyframes indet {
+  0%   { margin-left: -35%; }
+  100% { margin-left: 100%; }
+}
+
+/* ── drag-and-drop overlay ── */
+#dropHint {
+  position: absolute; inset: 0; z-index: 20;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(15,33,62,0.92);
+  border: 3px dashed #e94560;
+  color: #e94560;
+  font-size: 16px; font-weight: 600;
+  pointer-events: none;
+}
+#dropHint.show { display: flex; }
 
 /* ── viewer ── */
 #viewer {
@@ -344,7 +442,8 @@ canvas.act-canvas { width: 100%; display: block; }
 </div>
 
 <div id="main">
-  <div id="sidebar"></div>
+  <div id="dropHint">Drop video files to add clips</div>
+  <div id="sidebar"><div id="clipList"></div></div>
 
   <div id="viewer">
     <div id="empty">← select a clip</div>
@@ -372,6 +471,9 @@ let activeIdx  = null;
 let actData    = null;   // current activations JSON
 let headKeys   = [];     // heads present in the current actData, in display order
 const collapseState = {};
+const uploads  = {};     // id -> {name, pct, error}  (in-flight browser→server uploads)
+const ALLOWED_UPLOAD_SUFFIXES = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.pose'];
+let pollTimer  = null;   // polls /api/clips while any clip is still extracting
 
 // ── YlOrRd colormap ────────────────────────────────────────────────────────
 function ylOrRd(t) {
@@ -409,22 +511,136 @@ async function fetchClips() {
 
 function renderList() {
   const q  = document.getElementById('search').value.trim().toLowerCase();
-  const sb = document.getElementById('sidebar');
+  const cl = document.getElementById('clipList');
   const shown = clips.filter(c => !q || c.name.toLowerCase().includes(q));
   document.getElementById('count').textContent = shown.length + ' / ' + clips.length + ' clips';
-  sb.innerHTML = '';
+  cl.innerHTML = '';
+
+  // In-flight browser→server uploads (not yet acknowledged by the server).
+  Object.values(uploads).forEach(u => {
+    const el = document.createElement('div');
+    el.className = 'clip-item uploading';
+    const statusText = u.error ? ('Error: ' + u.error) : ('Uploading… ' + u.pct + '%');
+    el.innerHTML = `
+      <div>${u.name}</div>
+      <div class="upload-progress-wrap">
+        <div class="upload-status-text"${u.error ? ' style="color:#e94560"' : ''}>${statusText}</div>
+        <div class="upload-progress-bar-bg"><div class="upload-progress-bar" style="width:${u.pct}%"></div></div>
+      </div>`;
+    cl.appendChild(el);
+  });
+
   shown.forEach(c => {
+    const status    = c.status || 'ready';
+    const clickable = status === 'ready' && c.has_pose;
     const el = document.createElement('div');
     el.className = 'clip-item'
       + (activeIdx === c.idx ? ' active' : '')
-      + (c.has_pose ? '' : ' no-pose');
-    el.textContent = c.name + (c.has_pose ? '' : '  (pose extraction failed)');
-    el.onclick = () => { if (c.has_pose) selectClip(c); };
-    sb.appendChild(el);
+      + (clickable ? '' : ' no-pose')
+      + (status === 'extracting' ? ' status-extracting' : '')
+      + (status === 'failed'     ? ' status-failed'     : '');
+
+    if (status === 'extracting') {
+      const elapsed = c.elapsed != null ? Math.round(c.elapsed) + 's' : '';
+      el.innerHTML = `
+        <div>${c.name}</div>
+        <div class="upload-progress-wrap">
+          <div class="upload-status-text">Extracting pose… ${elapsed}</div>
+          <div class="upload-progress-bar-bg"><div class="upload-progress-bar indeterminate"></div></div>
+        </div>`;
+    } else if (status === 'failed') {
+      el.textContent = c.name + '  (pose extraction failed)';
+    } else {
+      el.textContent = c.name + (c.has_pose ? '' : '  (pose extraction failed)');
+    }
+    el.onclick = () => { if (clickable) selectClip(c); };
+    cl.appendChild(el);
   });
 }
 
 document.getElementById('search').addEventListener('input', renderList);
+
+// ── drag-and-drop upload ────────────────────────────────────────────────────
+function ensurePolling() {
+  if (pollTimer) return;
+  pollTimer = setInterval(async () => {
+    await fetchClips();
+    if (!clips.some(c => c.status === 'extracting')) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }, 1200);
+}
+
+function uploadFile(file) {
+  const suffix = '.' + (file.name.split('.').pop() || '').toLowerCase();
+  if (!ALLOWED_UPLOAD_SUFFIXES.includes(suffix)) {
+    alert('Unsupported file type: ' + file.name);
+    return;
+  }
+
+  const id = 'u' + Math.random().toString(36).slice(2);
+  uploads[id] = { name: file.name, pct: 0 };
+  renderList();
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/upload');
+  xhr.upload.addEventListener('progress', e => {
+    if (e.lengthComputable) {
+      uploads[id].pct = Math.round((e.loaded / e.total) * 100);
+      renderList();
+    }
+  });
+  xhr.onload = async () => {
+    if (xhr.status !== 200) {
+      let msg = 'upload failed';
+      try { msg = JSON.parse(xhr.responseText).error || msg; } catch (err) {}
+      uploads[id].error = msg;
+      renderList();
+      setTimeout(() => { delete uploads[id]; renderList(); }, 5000);
+      return;
+    }
+    delete uploads[id];
+    await fetchClips();
+    ensurePolling();
+  };
+  xhr.onerror = () => {
+    uploads[id].error = 'network error';
+    renderList();
+    setTimeout(() => { delete uploads[id]; renderList(); }, 5000);
+  };
+
+  const form = new FormData();
+  form.append('file', file);
+  xhr.send(form);
+}
+
+const mainEl   = document.getElementById('main');
+const dropHint = document.getElementById('dropHint');
+let dragDepth  = 0;
+
+// Prevent the browser from navigating to the dropped file anywhere on the page.
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop',     e => e.preventDefault());
+
+mainEl.addEventListener('dragenter', e => {
+  e.preventDefault();
+  dragDepth++;
+  dropHint.classList.add('show');
+});
+mainEl.addEventListener('dragover', e => e.preventDefault());
+mainEl.addEventListener('dragleave', e => {
+  e.preventDefault();
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) dropHint.classList.remove('show');
+});
+mainEl.addEventListener('drop', e => {
+  e.preventDefault();
+  dragDepth = 0;
+  dropHint.classList.remove('show');
+  const files = Array.from(e.dataTransfer.files || []);
+  files.forEach(uploadFile);
+});
 
 // ── video element ──────────────────────────────────────────────────────────
 const video = document.getElementById('video');
@@ -681,12 +897,13 @@ def index():
 # ---------------------------------------------------------------------------
 
 def main():
-    global CLIPS, MODEL, VOCAB, DEVICE, HANDEDNESS
+    global CLIPS, MODEL, VOCAB, DEVICE, HANDEDNESS, UPLOAD_DIR, POSE_CACHE_DIR
 
     ap = argparse.ArgumentParser(
         description="Interactive STS-Net v0.2 activation inspector")
-    ap.add_argument("videos", nargs="+",
-                    help="Video (.mp4, .mov, ...) or .pose files to inspect")
+    ap.add_argument("videos", nargs="*", default=[],
+                    help="Video (.mp4, .mov, ...) or .pose files to inspect "
+                         "(more can be added later by dragging them into the browser)")
     ap.add_argument("--ckpt", default="checkpoints/stsnet_v02.pt",
                     help="ClipClassifier checkpoint (default: checkpoints/stsnet_v02.pt)")
     ap.add_argument("--handedness", default="right", choices=["right", "left"])
@@ -695,14 +912,25 @@ def main():
     ap.add_argument("--pose_cache_dir", default=None,
                     help="Directory to cache extracted .pose files "
                          "(default: alongside each video)")
+    ap.add_argument("--upload_dir", default=None,
+                    help="Directory to save files dragged into the browser "
+                         "(default: a temp directory)")
+    ap.add_argument("--no_upload", action="store_true",
+                    help="Disable the browser drag-and-drop upload feature")
     ap.add_argument("--port", type=int, default=7860)
     ap.add_argument("--host", default="0.0.0.0")
     args = ap.parse_args()
 
     HANDEDNESS = args.handedness
-    pose_cache_dir = Path(args.pose_cache_dir) if args.pose_cache_dir else None
-    if pose_cache_dir:
-        pose_cache_dir.mkdir(parents=True, exist_ok=True)
+    POSE_CACHE_DIR = Path(args.pose_cache_dir) if args.pose_cache_dir else None
+    if POSE_CACHE_DIR:
+        POSE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+    if not args.no_upload:
+        UPLOAD_DIR = Path(args.upload_dir) if args.upload_dir \
+            else Path(tempfile.mkdtemp(prefix="stsnet_inspector_uploads_"))
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        print(f"Drag-and-drop uploads enabled, saving to: {UPLOAD_DIR}")
 
     # ── 1. Resolve videos → pose files (extracting where needed) ────────────
     print(f"Preparing {len(args.videos)} clip(s)…")
@@ -716,7 +944,7 @@ def main():
             pose_path, video_path = path, None
         elif path.suffix.lower() in VIDEO_SUFFIXES:
             video_path = path
-            cache_dir  = pose_cache_dir or path.parent
+            cache_dir  = POSE_CACHE_DIR or path.parent
             pose_path  = cache_dir / (path.name + ".pose")
             if not pose_path.exists():
                 ok = extract_pose(path, pose_path)
@@ -728,6 +956,7 @@ def main():
         CLIPS.append({
             "idx": len(CLIPS), "name": path.name,
             "video_path": video_path, "pose_path": pose_path,
+            "status": "ready" if pose_path is not None else "failed",
         })
 
     n_ok = sum(1 for c in CLIPS if c["pose_path"] is not None)

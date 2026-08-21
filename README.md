@@ -213,6 +213,14 @@ optional, so the server can also be started empty (`python scripts/inspector.py
 saved under `--upload_dir` (default: a temp directory); pass `--no_upload`
 to disable the feature.
 
+A "Show keypoints" toggle above the video overlays the raw MediaPipe Holistic
+landmarks (body pose, both hands, and a reduced set of face points) directly
+on the video frame, color-coded per stream and synced to the playhead —
+useful for sanity-checking that pose extraction tracked the signer
+correctly. The overlay uses each clip's un-normalized pixel-space landmarks
+(a separate `/api/clip/<idx>/keypoints` endpoint), independent of the
+model-input streams used for the activation heatmaps.
+
 ---
 
 ## Training

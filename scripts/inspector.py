@@ -47,6 +47,7 @@ VOCAB: dict = {}                # idx_to_shape/att/motion/cloc/ctype
 DEVICE  = torch.device("cpu")
 HANDEDNESS = "right"
 ACT_CACHE: dict[int, dict] = {}
+KP_CACHE: dict[int, dict] = {}      # raw keypoint overlay data, see _load_raw_keypoints
 UPLOAD_DIR: Path | None = None      # where drag-and-dropped files are saved
 POSE_CACHE_DIR: Path | None = None  # where their extracted .pose files go
 
@@ -69,6 +70,58 @@ def extract_pose(video_path: Path, pose_path: Path) -> bool:
         return False
     print(f"done ({time.time() - t0:.1f}s)")
     return True
+
+
+def _load_raw_keypoints(pose_path: Path) -> dict | None:
+    """
+    Raw, un-normalized MediaPipe landmarks for the on-video keypoint overlay:
+    full body pose (33 pts), both hands (21 pts each), and a reduced set of
+    face points — in original-video pixel coordinates.
+
+    Unlike stsnet.data.pose_io.load_pose_streams (used for model input),
+    this skips pose.normalize() and the wrist-centering/shoulder-scaling
+    steps, so the coordinates line up 1:1 with the source video frame.
+    """
+    from pose_format import Pose
+    from stsnet.data.pose_io import (
+        masked_to_float, POSE_LANDMARK_SLICE, LEFT_HAND_SLICE,
+        RIGHT_HAND_SLICE, FACE_INDICES,
+    )
+
+    try:
+        with open(pose_path, "rb") as f:
+            pose = Pose.read(f.read())
+    except Exception:
+        return None
+
+    data = pose.body.data[:, 0, :, :]      # (T, 576, 3)
+    conf = pose.body.confidence[:, 0, :]   # (T, 576)
+
+    body_pts  = masked_to_float(data[:, POSE_LANDMARK_SLICE, :], conf[:, POSE_LANDMARK_SLICE])
+    left_pts  = masked_to_float(data[:, LEFT_HAND_SLICE,     :], conf[:, LEFT_HAND_SLICE])
+    right_pts = masked_to_float(data[:, RIGHT_HAND_SLICE,    :], conf[:, RIGHT_HAND_SLICE])
+    face_pts  = masked_to_float(data[:, FACE_INDICES,        :], conf[:, FACE_INDICES])
+
+    def _xy(arr):
+        # (T, N, 3) -> (T, N) list of [x, y] pixel coords (rounded), or None
+        # for points MediaPipe didn't track that frame.
+        out = []
+        for frame in arr[..., :2]:
+            out.append([
+                None if np.isnan(x) or np.isnan(y) else [round(float(x), 1), round(float(y), 1)]
+                for x, y in frame
+            ])
+        return out
+
+    return {
+        "T":          int(body_pts.shape[0]),
+        "width":      int(pose.header.dimensions.width),
+        "height":     int(pose.header.dimensions.height),
+        "pose":       _xy(body_pts),
+        "left_hand":  _xy(left_pts),
+        "right_hand": _xy(right_pts),
+        "face":       _xy(face_pts),
+    }
 
 
 def _extract_worker(idx: int, video_path: Path, pose_path: Path) -> None:
@@ -222,6 +275,24 @@ def api_clip_activations(idx):
     }
     ACT_CACHE[idx] = result
     return jsonify(result)
+
+
+@app.route("/api/clip/<int:idx>/keypoints")
+def api_clip_keypoints(idx):
+    if idx in KP_CACHE:
+        return jsonify(KP_CACHE[idx])
+
+    if idx < 0 or idx >= len(CLIPS):
+        return jsonify({"error": "not found"}), 404
+    clip = CLIPS[idx]
+    if clip["pose_path"] is None:
+        return jsonify({"error": "pose extraction failed for this clip"}), 400
+
+    kp = _load_raw_keypoints(clip["pose_path"])
+    if kp is None:
+        return jsonify({"error": "pose load failed"}), 500
+    KP_CACHE[idx] = kp
+    return jsonify(kp)
 
 
 # ---------------------------------------------------------------------------
@@ -395,10 +466,35 @@ body {
   border-radius: 4px;
   overflow: hidden;
   display: flex;
-  justify-content: center;
-  max-height: 38vh;
+  flex-direction: column;
+  max-height: 42vh;
 }
+#videoToolbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 10px;
+  background: #0d1428;
+  font-size: 11px;
+  color: #aab4cc;
+}
+#videoToolbar label { display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; }
+#videoToolbar input[type=checkbox] { cursor: pointer; }
+#kpLegend { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+#kpLegend span { display: flex; align-items: center; gap: 4px; }
+#kpLegend .sw { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+#videoStage { position: relative; display: flex; justify-content: center; overflow: hidden; flex: 1; min-height: 0; }
+#videoBox { position: relative; display: inline-block; line-height: 0; }
 video { max-height: 38vh; max-width: 100%; display: block; }
+#kpCanvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  display: none;
+}
+#kpCanvas.show { display: block; }
 
 #empty { display: flex; align-items: center; justify-content: center; flex: 1; color: #555; font-size: 14px; }
 
@@ -449,7 +545,21 @@ canvas.act-canvas { width: 100%; display: block; }
     <div id="empty">← select a clip</div>
 
     <div id="videoWrap" style="display:none">
-      <video id="video" controls preload="metadata"></video>
+      <div id="videoToolbar">
+        <label><input type="checkbox" id="kpToggle"> Show keypoints</label>
+        <div id="kpLegend">
+          <span><i class="sw" style="background:#4fd1c5"></i>pose</span>
+          <span><i class="sw" style="background:#e94560"></i>left hand</span>
+          <span><i class="sw" style="background:#5aa9ff"></i>right hand</span>
+          <span><i class="sw" style="background:#f0c060"></i>face</span>
+        </div>
+      </div>
+      <div id="videoStage">
+        <div id="videoBox">
+          <video id="video" controls preload="metadata"></video>
+          <canvas id="kpCanvas"></canvas>
+        </div>
+      </div>
     </div>
 
     <div id="sections"></div>
@@ -465,6 +575,23 @@ const N_SHOW  = __N_SHOW__;
 const HEAD_ORDER  = __HEAD_ORDER__;
 const HEAD_TITLES = __HEAD_TITLES__;
 
+// Standard MediaPipe skeleton topologies, for the keypoint overlay.
+const POSE_CONNECTIONS = [
+  [0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],[9,10],
+  [11,12],[11,13],[13,15],[15,17],[15,19],[15,21],[17,19],
+  [12,14],[14,16],[16,18],[16,20],[16,22],[18,20],
+  [11,23],[12,24],[23,24],[23,25],[24,26],[25,27],[26,28],
+  [27,29],[28,30],[27,31],[28,32],[29,31],[30,32],
+];
+const HAND_CONNECTIONS = [
+  [0,1],[1,2],[2,3],[3,4],
+  [0,5],[5,6],[6,7],[7,8],
+  [5,9],[9,10],[10,11],[11,12],
+  [9,13],[13,14],[14,15],[15,16],
+  [13,17],[17,18],[18,19],[19,20],
+  [0,17],
+];
+
 // ── state ──────────────────────────────────────────────────────────────────
 let clips      = [];
 let activeIdx  = null;
@@ -474,6 +601,8 @@ const collapseState = {};
 const uploads  = {};     // id -> {name, pct, error}  (in-flight browser→server uploads)
 const ALLOWED_UPLOAD_SUFFIXES = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.pose'];
 let pollTimer  = null;   // polls /api/clips while any clip is still extracting
+let kpData     = null;   // current clip's raw keypoint overlay JSON
+let kpEnabled  = false;  // "Show keypoints" toggle state (persists across clips)
 
 // ── YlOrRd colormap ────────────────────────────────────────────────────────
 function ylOrRd(t) {
@@ -643,8 +772,80 @@ mainEl.addEventListener('drop', e => {
 });
 
 // ── video element ──────────────────────────────────────────────────────────
-const video = document.getElementById('video');
+const video    = document.getElementById('video');
+const kpCanvas = document.getElementById('kpCanvas');
+const kpToggle = document.getElementById('kpToggle');
 video.addEventListener('timeupdate', () => { if (actData) redrawAll(); });
+
+// ── keypoint overlay ─────────────────────────────────────────────────────────
+async function ensureKeypoints() {
+  if (!kpEnabled || activeIdx == null) return;
+  if (kpData && kpData._idx === activeIdx) return;
+  kpData = null;
+  try {
+    const r = await fetch('/api/clip/' + activeIdx + '/keypoints');
+    if (!r.ok) return;
+    const data = await r.json();
+    data._idx = activeIdx;
+    kpData = data;
+  } catch (e) { kpData = null; }
+}
+
+function drawKeypoints() {
+  const ctx = kpCanvas.getContext('2d');
+  if (kpCanvas.width === 0 || kpCanvas.height === 0) return;
+  ctx.clearRect(0, 0, kpCanvas.width, kpCanvas.height);
+  if (!kpEnabled || !kpData || !video.duration) return;
+
+  const fps = kpData.T / video.duration;
+  const f = Math.max(0, Math.min(kpData.T - 1, Math.round(video.currentTime * fps)));
+
+  const drawPts = (pts, color, connections, radius) => {
+    const frame = pts && pts[f];
+    if (!frame) return;
+    if (connections) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = Math.max(1, kpCanvas.width / 400);
+      connections.forEach(([a, b]) => {
+        const pa = frame[a], pb = frame[b];
+        if (!pa || !pb) return;
+        ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]); ctx.stroke();
+      });
+    }
+    ctx.fillStyle = color;
+    frame.forEach(p => {
+      if (!p) return;
+      ctx.beginPath(); ctx.arc(p[0], p[1], radius, 0, 2 * Math.PI); ctx.fill();
+    });
+  };
+
+  drawPts(kpData.pose,       '#4fd1c5', POSE_CONNECTIONS, kpCanvas.width / 220);
+  drawPts(kpData.face,       '#f0c060', null,              kpCanvas.width / 350);
+  drawPts(kpData.left_hand,  '#e94560', HAND_CONNECTIONS,  kpCanvas.width / 300);
+  drawPts(kpData.right_hand, '#5aa9ff', HAND_CONNECTIONS,  kpCanvas.width / 300);
+}
+
+function kpLoop() {
+  if (video.paused || video.ended) return;
+  drawKeypoints();
+  requestAnimationFrame(kpLoop);
+}
+
+video.addEventListener('loadedmetadata', () => {
+  kpCanvas.width  = video.videoWidth;
+  kpCanvas.height = video.videoHeight;
+  drawKeypoints();
+});
+video.addEventListener('play',    () => requestAnimationFrame(kpLoop));
+video.addEventListener('seeked',  drawKeypoints);
+video.addEventListener('pause',   drawKeypoints);
+
+kpToggle.addEventListener('change', async () => {
+  kpEnabled = kpToggle.checked;
+  kpCanvas.classList.toggle('show', kpEnabled);
+  if (kpEnabled) await ensureKeypoints();
+  drawKeypoints();
+});
 
 // ── sections DOM (built dynamically from the heads present) ────────────────
 function buildSections(keys) {
@@ -672,6 +873,7 @@ function buildSections(keys) {
 async function selectClip(c) {
   activeIdx = c.idx;
   actData   = null;
+  kpData    = null;
   renderList();
 
   document.getElementById('empty').style.display    = 'none';
@@ -680,6 +882,7 @@ async function selectClip(c) {
   if (c.has_video) {
     video.src = '/video/' + c.idx;
     video.load();
+    if (kpEnabled) await ensureKeypoints();
   } else {
     video.removeAttribute('src');
   }

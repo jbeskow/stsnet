@@ -41,6 +41,14 @@ _FACE_MESH_LOCAL = [
 ]
 _FACE_INDICES = [_FACE_MESH_OFFSET + i for i in _FACE_MESH_LOCAL]  # 25 points
 N_FACE = len(_FACE_INDICES)   # 25
+
+# Public aliases of the landmark-index constants above, for callers (e.g. the
+# inspector's keypoint overlay) that want the raw MediaPipe layout rather
+# than the model's normalized streams.
+POSE_LANDMARK_SLICE = slice(0, 33)
+LEFT_HAND_SLICE     = _LEFT_HAND_SLICE
+RIGHT_HAND_SLICE    = _RIGHT_HAND_SLICE
+FACE_INDICES        = _FACE_INDICES
 N_BODY = len(_UPPER_BODY_INDICES)  # 12
 N_BODY_TOTAL = N_BODY + N_FACE     # 37
 
@@ -119,6 +127,10 @@ def _masked_to_float(arr: np.ma.MaskedArray, conf: np.ndarray) -> np.ndarray:
     out[invalid] = np.nan
     out[np.ma.getmaskarray(arr)] = np.nan
     return out
+
+
+# Public alias — see POSE_LANDMARK_SLICE / LEFT_HAND_SLICE / etc. above.
+masked_to_float = _masked_to_float
 
 
 def _load_from_cache(

@@ -72,7 +72,34 @@ def extract_pose(video_path: Path, pose_path: Path) -> bool:
     return True
 
 
-def _load_raw_keypoints(pose_path: Path) -> dict | None:
+def _probe_edit_list_offset(video_path: Path) -> float:
+    """
+    Seconds of pre-roll hidden by an MP4 edit list before the video's first
+    *displayed* frame (0.0 if there is none).
+
+    This shows up when a clip is trimmed mid-stream with `ffmpeg -c copy`:
+    since the cut point usually isn't on a keyframe, ffmpeg copies packets
+    starting from the preceding keyframe, then adds an edit list telling
+    compliant players to skip the extra leading frames. Browsers honor
+    that (video.currentTime=0 is the intended cut point), but video_to_pose
+    decodes every raw frame in the file — so its frame 0 is actually this
+    many seconds *before* what the browser shows at time 0, and the two
+    only line back up at the very end of the clip (ffprobe's reported
+    stream `start_time` already reflects this offset).
+    """
+    try:
+        result = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=start_time",
+             "-of", "default=noprint_wrappers=1:nokey=1", str(video_path)],
+            capture_output=True, timeout=10,
+        )
+        return max(0.0, float(result.stdout.decode().strip()))
+    except Exception:
+        return 0.0
+
+
+def _load_raw_keypoints(pose_path: Path, video_path: Path | None = None) -> dict | None:
     """
     Raw, un-normalized MediaPipe landmarks for the on-video keypoint overlay:
     full body pose (33 pts), both hands (21 pts each), and a reduced set of
@@ -80,7 +107,8 @@ def _load_raw_keypoints(pose_path: Path) -> dict | None:
 
     Unlike stsnet.data.pose_io.load_pose_streams (used for model input),
     this skips pose.normalize() and the wrist-centering/shoulder-scaling
-    steps, so the coordinates line up 1:1 with the source video frame.
+    steps, so the coordinates line up 1:1 with the source video frame
+    (modulo the edit-list offset corrected for below).
     """
     from pose_format import Pose
     from stsnet.data.pose_io import (
@@ -113,14 +141,24 @@ def _load_raw_keypoints(pose_path: Path) -> dict | None:
             ])
         return out
 
+    T   = int(body_pts.shape[0])
+    fps = float(pose.body.fps)
+
+    frame_offset = 0
+    if video_path is not None:
+        offset_s = _probe_edit_list_offset(video_path)
+        frame_offset = max(0, min(T - 1, int(round(offset_s * fps))))
+
     return {
-        "T":          int(body_pts.shape[0]),
-        "width":      int(pose.header.dimensions.width),
-        "height":     int(pose.header.dimensions.height),
-        "pose":       _xy(body_pts),
-        "left_hand":  _xy(left_pts),
-        "right_hand": _xy(right_pts),
-        "face":       _xy(face_pts),
+        "T":            T,
+        "width":        int(pose.header.dimensions.width),
+        "height":       int(pose.header.dimensions.height),
+        "fps":          fps,
+        "frame_offset": frame_offset,   # add to round(currentTime * fps) — see edit-list note above
+        "pose":         _xy(body_pts),
+        "left_hand":    _xy(left_pts),
+        "right_hand":   _xy(right_pts),
+        "face":         _xy(face_pts),
     }
 
 
@@ -288,7 +326,7 @@ def api_clip_keypoints(idx):
     if clip["pose_path"] is None:
         return jsonify({"error": "pose extraction failed for this clip"}), 400
 
-    kp = _load_raw_keypoints(clip["pose_path"])
+    kp = _load_raw_keypoints(clip["pose_path"], clip.get("video_path"))
     if kp is None:
         return jsonify({"error": "pose load failed"}), 500
     KP_CACHE[idx] = kp
@@ -795,10 +833,18 @@ function drawKeypoints() {
   const ctx = kpCanvas.getContext('2d');
   if (kpCanvas.width === 0 || kpCanvas.height === 0) return;
   ctx.clearRect(0, 0, kpCanvas.width, kpCanvas.height);
-  if (!kpEnabled || !kpData || !video.duration) return;
+  if (!kpEnabled || !kpData || !kpData.fps) return;
 
-  const fps = kpData.T / video.duration;
-  const f = Math.max(0, Math.min(kpData.T - 1, Math.round(video.currentTime * fps)));
+  // Use the pose file's own fps + edit-list frame offset rather than
+  // deriving fps from video.duration — a clip trimmed mid-stream with
+  // `-c copy` can have leading frames hidden from playback by an MP4 edit
+  // list that video_to_pose still decodes, which would otherwise desync
+  // the overlay near the start of the clip (see _probe_edit_list_offset
+  // server-side). Frame 0 in kpData already accounts for that offset.
+  const f = Math.max(0, Math.min(
+    kpData.T - 1,
+    Math.round(video.currentTime * kpData.fps) + (kpData.frame_offset || 0)
+  ));
 
   const drawPts = (pts, color, connections, radius) => {
     const frame = pts && pts[f];
